@@ -44,6 +44,34 @@
       },
       "registered_skills": [],
       "installed_at": "2026-07-22T03:13:50.140717+00:00"
+    },
+    "analyze-autofix": {
+      "version": "1.0.0",
+      "source": "local",
+      "manifest_hash": "sha256:513e8cd23aabc010274b297a48caad799df14e59e113bc8098b181f1aae3854e",
+      "enabled": true,
+      "priority": 10,
+      "registered_commands": {
+        "claude": [
+          "speckit.analyze-autofix.run"
+        ]
+      },
+      "registered_skills": [],
+      "installed_at": "2026-07-22T03:50:27.964343+00:00"
+    },
+    "specify-review-loop": {
+      "version": "1.0.0",
+      "source": "local",
+      "manifest_hash": "sha256:311add8f4b40584eb7f9d8c36168c681ab4db3d659278b9023c19eace341b98c",
+      "enabled": true,
+      "priority": 10,
+      "registered_commands": {
+        "claude": [
+          "speckit.specify-review-loop.run"
+        ]
+      },
+      "registered_skills": [],
+      "installed_at": "2026-07-22T03:50:28.270290+00:00"
     }
   }
 }

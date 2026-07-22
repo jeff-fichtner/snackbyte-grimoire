@@ -1,0 +1,1 @@
+../../../.specify/extensions/analyze-autofix/.specify-dev/agent-commands/claude/speckit-analyze-autofix-run/SKILL.md

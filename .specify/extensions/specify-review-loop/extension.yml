@@ -1,0 +1,35 @@
+schema_version: "1.0"
+
+extension:
+  # NOTE: `id` must (a) not collide with a core command name — Spec Kit 0.13+ rejects
+  # `analyze`, `specify`, `plan`, `tasks`, `implement`, `clarify`, `checklist`,
+  # `constitution`, `converge`, `taskstoissues` outright — and (b) equal the namespace
+  # of every command below, which must match `speckit.<id>.<verb>`. This extension
+  # originally read `speckit.<core-command>.<verb>` (naming the command it hooks
+  # ONTO); that is backwards and was uninstallable. The id now follows the directory.
+  id: specify-review-loop
+  name: "Specify Review Loop"
+  version: "1.0.0"
+  description: "After /speckit-specify: recursively review the new spec for inconsistencies, ambiguity, and gaps, fixing the unambiguous ones each pass, until nothing fixable remains or an issue needs the user's direct attention"
+  author: snackbyte
+  license: MIT
+
+requires:
+  speckit_version: ">=0.2.0"
+
+provides:
+  commands:
+    - name: speckit.specify-review-loop.run
+      file: commands/speckit.specify-review-loop.run.md
+      description: "Recursively review-and-fix the spec until clean or blocked on the user"
+
+hooks:
+  after_specify:
+    command: speckit.specify-review-loop.run
+    optional: true
+    description: "Recursively review the spec and fix unambiguous issues"
+
+tags:
+  - "specify"
+  - "review"
+  - "core"

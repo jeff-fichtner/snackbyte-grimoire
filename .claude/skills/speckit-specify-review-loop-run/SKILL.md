@@ -1,0 +1,1 @@
+../../../.specify/extensions/specify-review-loop/.specify-dev/agent-commands/claude/speckit-specify-review-loop-run/SKILL.md

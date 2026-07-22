@@ -1,7 +1,9 @@
 installed:
 - agent-context
+- analyze-autofix
 - engine
 - git
+- specify-review-loop
 settings:
   auto_execute_hooks: true
 hooks:
@@ -13,6 +15,14 @@ hooks:
     priority: 10
     prompt: Execute speckit.agent-context.update?
     description: Refresh agent context after specification
+    condition: null
+  - extension: specify-review-loop
+    command: speckit.specify-review-loop.run
+    enabled: true
+    optional: true
+    priority: 10
+    prompt: Execute speckit.specify-review-loop.run?
+    description: Recursively review the spec and fix unambiguous issues
     condition: null
   after_plan:
   - extension: agent-context
@@ -40,4 +50,13 @@ hooks:
     priority: 10
     prompt: Execute speckit.git.commit?
     description: Checkpoint the feature's spec artifacts before implementation
+    condition: null
+  after_analyze:
+  - extension: analyze-autofix
+    command: speckit.analyze-autofix.run
+    enabled: true
+    optional: true
+    priority: 10
+    prompt: Execute speckit.analyze-autofix.run?
+    description: Apply unambiguous analysis fixes and re-present results
     condition: null

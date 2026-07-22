@@ -1,0 +1,35 @@
+schema_version: "1.0"
+
+extension:
+  # NOTE: `id` must (a) not collide with a core command name — Spec Kit 0.13+ rejects
+  # `analyze`, `specify`, `plan`, `tasks`, `implement`, `clarify`, `checklist`,
+  # `constitution`, `converge`, `taskstoissues` outright — and (b) equal the namespace
+  # of every command below, which must match `speckit.<id>.<verb>`. This extension
+  # originally read `speckit.<core-command>.<verb>` (naming the command it hooks
+  # ONTO); that is backwards and was uninstallable. The id now follows the directory.
+  id: analyze-autofix
+  name: "Analyze Auto-Fix"
+  version: "1.0.0"
+  description: "After /speckit-analyze: apply the unambiguous fixes from the analysis report to spec.md / plan.md / tasks.md, then re-present the analysis so remaining (judgment-dependent) findings are clear"
+  author: snackbyte
+  license: MIT
+
+requires:
+  speckit_version: ">=0.2.0"
+
+provides:
+  commands:
+    - name: speckit.analyze-autofix.run
+      file: commands/speckit.analyze-autofix.run.md
+      description: "Fix the unambiguous analysis findings and re-present the report"
+
+hooks:
+  after_analyze:
+    command: speckit.analyze-autofix.run
+    optional: true
+    description: "Apply unambiguous analysis fixes and re-present results"
+
+tags:
+  - "analyze"
+  - "autofix"
+  - "core"
