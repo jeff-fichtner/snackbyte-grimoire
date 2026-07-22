@@ -95,7 +95,7 @@ signed event; observe the message and a `delivered` record.
 - [X] T029 [US1] Implement `deliver()` in `src/core/logistics/deliver.ts` — the single chokepoint; happy path only at this stage
 - [X] T030 [US1] Implement the walk in `src/core/invocation.ts` — trigger → law → spell → logic → verb → nouns → logistics, in that order, each spell handled independently so one failure cannot block another
 - [X] T031 [US1] Implement `POST /invoke/:registrationId` in `src/server.ts` with `express.raw()` mounted on this route only, verifying **before** parsing, and answering `202` once the record is durably `pending`
-- [ ] T032 [US1] Add `scripts/seed-dev.mjs` (registered as `npm run seed:dev`) creating **two** tenants with their own registrations, spells, and destinations — one tenant cannot demonstrate the property US2 exists to prove
+- [X] T032 [US1] Add `scripts/seed-dev.mjs` (registered as `npm run seed:dev`) creating **two** tenants with their own registrations, spells, and destinations — one tenant cannot demonstrate the property US2 exists to prove
 
 **Checkpoint**: quickstart scenarios 1–3 pass — a spell speaks, an edit takes effect with no restart, a condition declines and is recorded as `declined`.
 
