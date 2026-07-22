@@ -7,3 +7,8 @@ dist/
 .DS_Store
 coverage/
 *.tsbuildinfo
+
+# spec-render output — derived views beside each Spec Kit .md.
+# Markdown stays the source of truth; regenerate with `spec-render`, remove with
+# `spec-render --clean`.
+specs/**/*.html
