@@ -24,6 +24,7 @@ substitutions:
   _REGION: ''
   _DATABASE_URL_SECRET: ''
   _BOT_TOKEN_SECRET: ''
+  _RUNTIME_SA: '' # the per-tier runtime service account; scoped to only this tier's secrets
 
 # Refuse to run rather than guess. Cloud Build does not enforce required substitutions, so
 # the check is explicit and it is the first thing that happens.
@@ -43,6 +44,7 @@ steps:
         [ -z "${_REGION}" ]              && missing="$$missing _REGION"
         [ -z "${_DATABASE_URL_SECRET}" ] && missing="$$missing _DATABASE_URL_SECRET"
         [ -z "${_BOT_TOKEN_SECRET}" ]    && missing="$$missing _BOT_TOKEN_SECRET"
+        [ -z "${_RUNTIME_SA}" ]          && missing="$$missing _RUNTIME_SA"
         if [ -n "$$missing" ]; then
           echo "REFUSING TO DEPLOY. Missing required substitutions:$$missing" >&2
           echo "A default for any of these could deploy the wrong code, or the right code" >&2
@@ -77,6 +79,11 @@ steps:
       - '--image=${_REGION}-docker.pkg.dev/$PROJECT_ID/grimoire/${_SERVICE}:$TAG_NAME'
       - '--region=${_REGION}'
       - '--platform=managed'
+      # The runtime identity is per-tier and scoped to ONLY this tier's secrets (an IAM
+      # condition on the grimoire-<env>- name prefix). This is the enforced half of isolation:
+      # even if _DATABASE_URL_SECRET above named the wrong tier's secret, this identity could
+      # not read it — the deploy fails closed instead of silently serving prod against staging.
+      - '--service-account=${_RUNTIME_SA}'
       # Always-on: the service holds connections and must not cold-start on every event.
       - '--min-instances=1'
       # Public at the transport layer ON PURPOSE. A webhook source (GitHub, ClickUp) cannot
