@@ -6,13 +6,14 @@
  * redaction decides whether a credential ends up in a log line someone later pastes into a
  * ticket. Neither failure announces itself.
  */
-import { describe, expect, it, vi } from 'vitest';
+import pino from 'pino';
+import { describe, expect, it } from 'vitest';
 import { createDiscordBinding } from '../../src/bindings/discord/index.js';
 import {
   PermanentDeliveryFailure,
   TransientDeliveryFailure,
 } from '../../src/core/logistics/binding.js';
-import { log } from '../../src/core/log.js';
+import { REDACT_PATHS } from '../../src/core/log.js';
 
 const registry = {
   getRest: async (applicationId: string) => ({ applicationId, token: 'tok' }),
@@ -71,13 +72,15 @@ describe('permanent vs transient', () => {
 
 describe('redaction', () => {
   it('censors secret-ish fields even when a caller passes one by mistake', () => {
+    // pino writes to the file descriptor directly, so spying on process.stdout catches
+    // nothing. Build a logger with the REAL redact paths and a capturing stream instead —
+    // this asserts the shipped configuration, not a restatement of it.
     const written: string[] = [];
-    const spy = vi.spyOn(process.stdout, 'write').mockImplementation((chunk) => {
-      written.push(String(chunk));
-      return true;
-    });
+    const probe = pino({ redact: { paths: REDACT_PATHS, censor: '[redacted]' }, base: undefined }, {
+      write: (chunk: string) => written.push(chunk),
+    } as never);
 
-    log.info(
+    probe.info(
       {
         token: 'super-secret-bot-token',
         nested: { secret: 'inner-secret', password: 'hunter2' },
@@ -86,7 +89,6 @@ describe('redaction', () => {
       'a log line',
     );
 
-    spy.mockRestore();
     const output = written.join('');
     // Relying on callers never to pass a credential is relying on perfect vigilance
     // forever. Redacting by key name means the mistake still does not reach the log.

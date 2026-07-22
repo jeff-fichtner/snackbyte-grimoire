@@ -22,11 +22,12 @@ const REDACTED = [
   'DATABASE_URL',
 ];
 
-const paths = REDACTED.flatMap((key) => [key, `*.${key}`, `*.*.${key}`]);
+/** Exported so tests assert the real configuration, not a restatement of it. */
+export const REDACT_PATHS = REDACTED.flatMap((key) => [key, `*.${key}`, `*.*.${key}`]);
 
 export const log = pino({
   level: process.env.LOG_LEVEL ?? 'info',
-  redact: { paths, censor: '[redacted]' },
+  redact: { paths: REDACT_PATHS, censor: '[redacted]' },
   base: undefined,
 });
 
