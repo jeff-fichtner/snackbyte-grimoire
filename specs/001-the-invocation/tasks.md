@@ -6,6 +6,9 @@
 
 - **[P]** — parallelizable: touches different files and depends on nothing incomplete
 - **[US1]/[US2]/[US3]** — the user story this task serves (story phases only)
+- A **letter-suffixed id** (`T028a`) is a task inserted after the list was first numbered.
+  Renumbering would be churn and would break every external reference to a task, so ids are
+  append-only once assigned.
 
 ## Path Conventions
 
@@ -35,7 +38,7 @@ construction: the crossings, the enumeration probe, the timing assertion.
 
 - [ ] T001 Add runtime dependencies (`express`, `pg`, `pino`) and dev deps (`supertest`, `@types/express`, `@types/pg`) to `package.json`
 - [ ] T002 [P] Add `tsconfig.build.json` emitting `dist/server` from `src/`, excluding `src/web/**` and `tests/**`
-- [ ] T003 [P] Add `.env.example` documenting platform config only — `DATABASE_URL`, `PORT`, `LOG_LEVEL`, `DISCORD_BOT_TOKEN` — with a comment stating that anything a second tenant would need differently belongs in the store, not here
+- [ ] T003 [P] Add `.env.example` documenting platform config only — `DATABASE_URL`, `PORT`, `LOG_LEVEL`, `DISCORD_BOT_TOKEN` — with a comment stating that anything a second tenant would need differently belongs in the store, not here, and that `DISCORD_BOT_TOKEN` is read **only** by the resolver behind `applications.token_ref`, never directly by a caller
 - [ ] T004 [P] Add `scripts/migrate.mjs` — forward-only runner applying `migrations/*.sql` in order, recording applied names in a `schema_migrations` table, registered as `npm run migrate` in `package.json`
 - [ ] T005 [P] Add `Dockerfile` (multi-stage: build server + web, run `dist/server/main.js` on Node 24 slim)
 - [ ] T006 [P] Add `cloudbuild.yaml` building the image and deploying to a **new** Cloud Run service — never the predecessor's
@@ -51,7 +54,7 @@ construction: the crossings, the enumeration probe, the timing assertion.
 **Purpose**: Ownership, the store, and the shape of the walk. **No user story can begin until
 this phase is done** — and specifically, no query may exist before the type that scopes it.
 
-- [ ] T009 Write `migrations/0001_the_invocation.sql` creating `tenants`, `installs`, `source_registrations`, `destinations`, `spells`, `secrets`, `records` exactly as specified in [data-model.md](./data-model.md) — every owned table with `tenant_id NOT NULL`, every composite uniqueness including `tenant_id`, and `UNIQUE (spell_id, dedupe_key)` on `records`
+- [ ] T009 Write `migrations/0001_the_invocation.sql` creating `applications`, `tenants`, `installs`, `source_registrations`, `destinations`, `spells`, `secrets`, `records` exactly as specified in [data-model.md](./data-model.md) — every **tenant-owned** table with `tenant_id NOT NULL`, every composite uniqueness including `tenant_id`, `UNIQUE (spell_id, dedupe_key)` on `records`, and `applications` as the one platform-layer table (nullable `tenant_id`, seeded with a single row for the Discord binding, plus the partial unique index that makes "one platform application per binding" actually hold — a plain `UNIQUE` does not, because Postgres treats NULLs as distinct)
 - [ ] T010 Implement `TenantRef` in `src/core/law/tenant-ref.ts` — a branded type whose brand symbol is **not exported**, with minting functions that take verified evidence only
 - [ ] T011 [P] Write `tests/unit/tenant-ref.test.ts` proving a `TenantRef` cannot be produced from a plain string or a request-shaped object without an explicit `as unknown as` cast
 - [ ] T012 Define the `Repository` interface in `src/db/repository.ts` — every method takes `TenantRef` first, per [contracts/inbound-http.md](./contracts/inbound-http.md); `ping()` is the sole exception and reads nothing
@@ -87,7 +90,8 @@ signed event; observe the message and a `delivered` record.
 - [ ] T025 [US1] Implement `authenticate()` in `src/core/law/authenticate.ts` — HMAC over the **raw request bytes** using `timingSafeEqual`
 - [ ] T026 [US1] Implement `resolveTenant()` in `src/core/law/resolve.ts` — selector → registration → verified `TenantRef`
 - [ ] T027 [P] [US1] Implement the verb registry and the `post_message` charm in `src/core/language/verbs/` — carrying `verbClass: 'charm'` and `needsReturnChannel: false`
-- [ ] T028 [US1] Implement the Discord binding in `src/bindings/discord/` — REST message send, the only file importing `discord.js`
+- [ ] T028 [US1] Implement the Discord binding in `src/bindings/discord/` — REST message send, the only file importing `discord.js`. Its client is obtained from `getRest(applicationId)`, which loads the `applications` row and resolves `token_ref`; the binding never reads `DISCORD_BOT_TOKEN` and holds no module-level client (FR-025)
+- [ ] T028a [P] [US1] Write `tests/unit/application-identity.test.ts` — `getRest` resolves a client for a given application id, two ids resolve independently, and no exported surface returns a client without one
 - [ ] T029 [US1] Implement `deliver()` in `src/core/logistics/deliver.ts` — the single chokepoint; happy path only at this stage
 - [ ] T030 [US1] Implement the walk in `src/core/invocation.ts` — trigger → law → spell → logic → verb → nouns → logistics, in that order, each spell handled independently so one failure cannot block another
 - [ ] T031 [US1] Implement `POST /invoke/:registrationId` in `src/server.ts` with `express.raw()` mounted on this route only, verifying **before** parsing, and answering `202` once the record is durably `pending`
@@ -190,7 +194,7 @@ declared exception recorded in the spec and in MIGRATION.
 
 - **Phase 1**: T002–T006 are all independent files.
 - **Phase 2**: T011, T013, T015, T016 after their subjects exist.
-- **Phase 3**: T019, T020 (tests) with T022, T023, T024, T027 (independent modules).
+- **Phase 3**: T019, T020 (tests) with T022, T023, T024, T027 (independent modules); T028a after T028.
 - **Phase 4**: T033, T034 with T038, T040.
 - **Phase 5**: T041, T042 in parallel; T043 after T044.
 

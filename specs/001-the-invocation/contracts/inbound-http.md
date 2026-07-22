@@ -130,6 +130,28 @@ interface Verb<Config> {
 `verbClass` exists from the first verb even though 001 ships only a charm, because retrofitting
 a safety classification onto an unclassed vocabulary means auditing every verb later.
 
+## `getRest` — identity is a lookup, never a constant
+
+```ts
+// src/bindings/registry.ts
+export function getRest(applicationId: string): Promise<BindingClient>;
+```
+
+Loads the `applications` row, resolves its `token_ref`, and returns a client for that identity.
+**No exported function returns a client without an application id**, and no module holds one at
+load time.
+
+The seam matters more than today's storage. The token's bytes currently live in
+`DISCORD_BOT_TOKEN` — legitimate platform config, since no second tenant needs a different value
+— but nothing reads that variable directly; it is reached only by the resolver behind
+`token_ref`. Storage can move later without touching a caller. The *lookup* cannot be added
+later without touching every caller, which is exactly what the predecessor discovered when it
+priced this refactor as the most expensive item in its tenancy work.
+
+`getRest(appId)` returning the single row today, versus returning one connection of a sharded
+pool later, is the same signature — so the connection manager arrives behind it without a call
+site moving.
+
 ## `deliver` — the chokepoint
 
 ```ts
