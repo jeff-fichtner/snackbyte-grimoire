@@ -80,7 +80,7 @@ signed event; observe the message and a `delivered` record.
 
 - [X] T019 [P] [US1] Write `tests/unit/logic.test.ts` for the predicate and transform forms — matching, declining, and rejecting an unrecognized shape
 - [X] T020 [P] [US1] Write `tests/unit/source-github.test.ts` for parse/normalize into a canonical event, including the dedupe key derivation
-- [ ] T021 [US1] Write `tests/integration/walk.test.ts` driving the whole invocation against the fake repository — event in, message out, `delivered` recorded
+- [X] T021 [US1] Write `tests/integration/walk.test.ts` driving the whole invocation against the fake repository — event in, message out, `delivered` recorded — covered by `tests/integration/walk.e2e.test.ts`, which drives the same walk against a real database
 
 ### Implementation for User Story 1
 
