@@ -1,0 +1,91 @@
+/**
+ * Grimoire design tokens.
+ *
+ * The palette carries meaning, and that is the rule worth protecting: gold is the
+ * tenant's, purple is the language, green is a guarantee, rust is danger, and parchment
+ * means "the tenant's own artifact". A reviewer should be able to read the model off the
+ * colours without reading a word — so reach for a semantic token, never a raw hex.
+ *
+ * The one consequence that is easy to get wrong: a hex (the irreversible verb class) is
+ * NOT the tenant's, so it never gets parchment. It gets --surface-sealed.
+ */
+
+:root {
+  /* ---- surfaces, darkest outward ---- */
+  --canvas: #0b0a08;
+  --shell: #15120e;
+  --chrome: #12100c;
+  --panel: #13110c;
+  --panel-deep: #100e0a;
+  --inset: #181510;
+  --inset-raised: #1c1813;
+
+  /* the tenant's own artifact — a spell, rendered as a page */
+  --parchment: #e7ddc6;
+  /* an engineer-authored hex: sealed, never the tenant's, never parchment */
+  --surface-sealed: #221d17;
+
+  /* ---- semantic accents ---- */
+  /* gold — the tenant's own: ownership, primary action */
+  --gold: #cda349;
+  --gold-bright: #e4c374;
+  --gold-dim: #b58a2e;
+  --gold-soft: #c9b06a;
+
+  /* purple — the language: triggers, logic, conditions */
+  --language: #9089bf;
+  --language-ink: #6a4fa0;
+
+  /* green — logistics: guarantees, healthy, active */
+  --guarantee: #86a06f;
+  --guarantee-ink: #4f7a3e;
+
+  /* rust — hexes: irreversible, high blast radius */
+  --danger: #bb6647;
+  --danger-soft: #c98d72;
+  --danger-bright: #d18a6c;
+
+  /* binding-specific chrome ONLY — never structural */
+  --binding-discord: #7f8cf0;
+  --binding-discord-soft: #aeb6f5;
+
+  /* ---- text on dark, brightest first ---- */
+  --ink-1: #e9e1d1;
+  --ink-2: #c9c0ad;
+  --ink-3: #a89f8e;
+  --ink-4: #9c9382;
+  --ink-5: #8a8272;
+  --ink-6: #6a6357;
+  --ink-7: #5c564b;
+
+  /* ---- text on parchment ---- */
+  --page-1: #26221a;
+  --page-2: #4a4436;
+  --page-3: #6f6653;
+  --page-label: #a08a4e;
+  --page-label-dim: #8a7a52;
+
+  /* ---- lines ---- */
+  --line: rgba(232, 224, 208, 0.09);
+  --line-strong: rgba(232, 224, 208, 0.14);
+  --line-faint: rgba(232, 224, 208, 0.07);
+  --line-page: rgba(38, 34, 26, 0.13);
+  --selection: rgba(205, 163, 73, 0.28);
+
+  /* ---- type ---- */
+  --font-serif: 'Spectral', Georgia, serif;
+  --font-sans: 'Hanken Grotesk', system-ui, sans-serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, monospace;
+
+  /* ---- frame ---- */
+  --topbar-h: 58px;
+  --sidebar-w: 216px;
+  --pane-w: 352px;
+  --radius: 7px;
+  --radius-sm: 5px;
+  --shadow-card:
+    0 2px 0 rgba(0, 0, 0, 0.25), 0 14px 26px -18px rgba(0, 0, 0, 0.6);
+
+  /* micro-heading treatment used for every uppercase label */
+  --label-tracking: 0.14em;
+}

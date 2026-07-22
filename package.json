@@ -3,29 +3,43 @@
   "version": "0.1.0",
   "private": true,
   "type": "module",
-  "description": "Grimoire — spells for your community: performative speech for chat platforms",
+  "description": "Grimoire \u2014 spells for your community: performative speech for chat platforms",
   "license": "UNLICENSED",
   "engines": {
     "node": ">=24 <25"
   },
   "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
     "lint": "eslint .",
     "format": "prettier --config config/.prettierrc.json --ignore-path config/.prettierignore --write \"**/*.{ts,tsx,js,mjs,json,md}\"",
     "format:check": "prettier --config config/.prettierrc.json --ignore-path config/.prettierignore --check \"**/*.{ts,tsx,js,mjs,json,md}\"",
-    "typecheck": "tsc --noEmit",
+    "typecheck": "tsc --noEmit && tsc --noEmit -p tsconfig.web.json",
     "test": "vitest run",
     "test:watch": "vitest",
     "check:all": "npm run format:check && npm run lint && npm run typecheck && npm test"
   },
   "devDependencies": {
     "@eslint/js": "^9.39.4",
+    "@testing-library/dom": "^10.4.1",
+    "@testing-library/react": "^16.3.2",
     "@types/node": "^25.9.1",
+    "@types/react": "^19.2.17",
+    "@types/react-dom": "^19.2.3",
+    "@vitejs/plugin-react": "^6.0.4",
     "eslint": "^9.39.4",
     "eslint-config-prettier": "^10.1.8",
     "globals": "^17.6.0",
+    "jsdom": "^29.1.1",
     "prettier": "^3.8.3",
     "typescript": "^6.0.3",
     "typescript-eslint": "^8.60.0",
+    "vite": "^8.1.5",
     "vitest": "^4.1.8"
+  },
+  "dependencies": {
+    "react": "19.2.8",
+    "react-dom": "19.2.8"
   }
 }

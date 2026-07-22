@@ -1,0 +1,227 @@
+.shell {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  background: var(--shell);
+}
+
+.topbar {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  padding: 0 22px;
+  height: var(--topbar-h);
+  flex-shrink: 0;
+  background: var(--chrome);
+  border-bottom: 1px solid var(--line);
+}
+
+.mark {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+}
+
+.sigil {
+  width: 20px;
+  height: 20px;
+  border: 1.5px solid var(--gold);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--gold);
+  font-size: 9px;
+}
+
+.wordmark {
+  font-family: var(--font-serif);
+  font-size: 18px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  color: var(--ink-1);
+}
+
+.divider {
+  width: 1px;
+  height: 24px;
+  background: var(--line-strong);
+}
+
+.tenant {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: none;
+  border: none;
+  padding: 4px 6px;
+  border-radius: 6px;
+  color: inherit;
+}
+
+.tenant:hover {
+  background: rgba(232, 224, 208, 0.05);
+}
+
+.crest {
+  width: 22px;
+  height: 22px;
+  border-radius: 6px;
+  background: repeating-linear-gradient(45deg, #3a3348, #3a3348 3px, #332d42 3px, #332d42 6px);
+}
+
+.tenantName {
+  font-family: var(--font-serif);
+  font-size: 15px;
+  color: var(--ink-1);
+}
+
+.caret {
+  color: var(--ink-6);
+  font-size: 11px;
+}
+
+.topbarEnd {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.search {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 12px;
+  width: 220px;
+  background: var(--inset-raised);
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius);
+  font-size: 12.5px;
+  color: var(--ink-6);
+}
+
+.avatar {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: repeating-linear-gradient(45deg, #4a3f2c, #4a3f2c 3px, #413827 3px, #413827 6px);
+}
+
+.body {
+  display: flex;
+  flex: 1;
+  min-height: 0;
+}
+
+.sidebar {
+  width: var(--sidebar-w);
+  flex-shrink: 0;
+  background: var(--chrome);
+  border-right: 1px solid var(--line);
+  padding: 18px 12px;
+  display: flex;
+  flex-direction: column;
+}
+
+.navItem {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  padding: 9px 12px;
+  border-radius: var(--radius);
+  color: var(--ink-3);
+}
+
+.navItem:hover {
+  color: var(--ink-1);
+  background: rgba(232, 224, 208, 0.04);
+}
+
+.navActive {
+  background: rgba(205, 163, 73, 0.12);
+  color: var(--gold-bright);
+}
+
+.navIcon {
+  font-size: 12px;
+  opacity: 0.75;
+}
+
+.navLabel {
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.navCount {
+  margin-left: auto;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--ink-6);
+}
+
+.navActive .navCount {
+  color: var(--gold-dim);
+}
+
+/* Secondary: the platform's own vocabulary, available but never promoted. */
+.navGroup {
+  margin-top: 20px;
+  padding-top: 16px;
+  border-top: 1px solid var(--line-faint);
+  display: flex;
+  flex-direction: column;
+}
+
+.navSecondary {
+  padding: 7px 12px;
+  font-size: 12.5px;
+  color: var(--ink-6);
+}
+
+.navSecondary:hover {
+  color: var(--ink-3);
+}
+
+.binding {
+  margin-top: auto;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 10px;
+  border-radius: var(--radius);
+  background: rgba(88, 101, 242, 0.1);
+  border: 1px solid rgba(88, 101, 242, 0.24);
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--binding-discord-soft);
+}
+
+.bindingDot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--binding-discord);
+}
+
+@media (max-width: 900px) {
+  .sidebar {
+    width: 64px;
+    padding: 18px 8px;
+  }
+
+  .navLabel,
+  .navCount,
+  .navSecondary,
+  .binding span:last-child {
+    display: none;
+  }
+
+  .search {
+    width: 44px;
+  }
+
+  .search span:last-child {
+    display: none;
+  }
+}

@@ -1,0 +1,156 @@
+/* Shared frame for both faces of the pane. */
+.page,
+.sealed {
+  width: var(--pane-w);
+  flex-shrink: 0;
+  border-left: 1px solid var(--line);
+  padding: 26px;
+  overflow-y: auto;
+}
+
+/* A charm is the tenant's own artifact — warm paper. */
+.page {
+  background: var(--parchment);
+  color: var(--page-2);
+}
+
+/* A hex is not theirs. Cold, sealed, rust-edged — deliberately not parchment. */
+.sealed {
+  background: var(--surface-sealed);
+  color: var(--ink-5);
+  border-left: 1px solid rgba(187, 102, 71, 0.35);
+}
+
+.eyebrow,
+.eyebrowSealed {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: var(--label-tracking);
+  text-transform: uppercase;
+  margin-bottom: 8px;
+}
+
+.eyebrow {
+  color: var(--page-label-dim);
+}
+
+.eyebrowSealed {
+  color: var(--danger-bright);
+}
+
+.title {
+  margin: 0 0 6px;
+  font-family: var(--font-serif);
+  font-size: 24px;
+  font-weight: 600;
+  line-height: 1.2;
+  color: var(--page-1);
+}
+
+.sealed .title {
+  color: var(--ink-2);
+}
+
+.summary {
+  margin: 0 0 22px;
+  font-family: var(--font-serif);
+  font-style: italic;
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--page-3);
+}
+
+.sealed .summary {
+  color: var(--ink-4);
+  font-style: normal;
+}
+
+.section {
+  margin-bottom: 20px;
+}
+
+.label {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: var(--label-tracking);
+  text-transform: uppercase;
+  margin-bottom: 7px;
+  color: var(--page-label);
+}
+
+.sealed .label {
+  color: var(--ink-6);
+}
+
+.body {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  line-height: 1.7;
+}
+
+.guarantees {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--page-2);
+}
+
+.guarantees span {
+  color: var(--guarantee-ink);
+}
+
+.sealedNote {
+  margin: 18px 0 0;
+  padding-top: 14px;
+  border-top: 1px solid rgba(232, 224, 208, 0.08);
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  line-height: 1.7;
+  color: var(--ink-5);
+}
+
+.sealedFooter {
+  margin: 14px 0 0;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--ink-6);
+}
+
+.actions {
+  display: flex;
+  gap: 9px;
+  margin-top: 24px;
+}
+
+.primary,
+.secondary {
+  font-family: var(--font-sans);
+  font-size: 12.5px;
+  background: transparent;
+  border-radius: 6px;
+  padding: 9px 12px;
+}
+
+.primary {
+  flex: 1;
+  font-weight: 600;
+  color: var(--page-1);
+  border: 1px solid rgba(38, 34, 26, 0.3);
+}
+
+.secondary {
+  color: var(--page-3);
+  border: 1px solid rgba(38, 34, 26, 0.2);
+}
+
+@media (max-width: 1100px) {
+  .page,
+  .sealed {
+    display: none;
+  }
+}
