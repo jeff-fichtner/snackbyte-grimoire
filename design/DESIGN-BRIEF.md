@@ -324,10 +324,32 @@ declines to say whether a caller was unknown or forged, no surface may say eithe
 "helpful" message would leak exactly what an attacker is probing for. This is now enforced
 by a test, not merely documented.
 
+### Turn 5 — DELIVERED (`GrimoireIcon.dc.html`)
+
+The app icon: a gold ring around a rounded diamond carrying an inner outline — the circle a
+spell is cast within, around the stone. Two variants at 512×512, plus previews at Discord's
+own display sizes (rounded 128, circle 64), which re-proportion the stroke as they shrink
+and drop the faint outer circle.
+
+| File | Goes to |
+|---|---|
+| `grimoire-app-icon.png` | the **production** Discord application's icon |
+| `grimoire-app-icon-dev.png` | the **staging** Discord application's icon (`environments.json` → branch `dev`) |
+
+**The dev variant is not decoration.** Both bots sit in the same server during development,
+and the only way to know which one just spoke is the avatar beside the message. So it
+changes on the two axes that survive a 32px avatar: gold → slate, and solid ring → dashed,
+with a `DEV` stamp as the third, redundant signal. Slate is deliberately outside the
+semantic palette — it is not gold, purple, green, or rust, so it never reads as a claim
+about the model.
+
 ### Implemented so far
 
 2a (home, tokens, the hex inversion) and 4a (Records, trace, outcome vocabulary), plus 4c's
-focus states. Designed but unbuilt: 2b, 3a, 3b, 3c, 4b, and the rest of 4c.
+focus states. Turn 5's icon ships as the web favicon (`src/web/public/icon.svg`, transcribed
+from the design's geometry rather than exported as a raster, so it stays crisp and editable);
+the two PNGs are the assets of record for the Discord portal, which is a manual upload.
+Designed but unbuilt: 2b, 3a, 3b, 3c, 4b, and the rest of 4c.
 
 ### Next
 
@@ -350,3 +372,8 @@ browse the book but never open a spell.
 - **Empty states.** A brand-new tenant has zero spells, and that screen is arguably more
   important than the populated one shown in turn 1.
 - **Responsive / smaller viewports.** Turn 1 is a fixed 1240×840 desktop frame only.
+- **The 20px topbar sigil.** The icon design stops at Discord's sizes (512 down to 64) and
+  the topbar mark is 20px, where the icon's own proportions collapse — a 6/312 ring is a
+  hairline. The placeholder (a gold circle around `◆`) is still in place because reducing
+  the real icon that far needs a decision, not a scale factor. The icon's own 128 and 64
+  previews show the intended move: thicken the stroke as it shrinks, drop detail.
