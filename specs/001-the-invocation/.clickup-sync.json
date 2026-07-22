@@ -40,5 +40,8 @@
         "US3"
       ]
     }
-  ]
+  ],
+  "lifecycle": {
+    "implementStarted": true
+  }
 }
