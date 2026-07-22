@@ -44,6 +44,27 @@ export default tseslint.config(
     },
   },
   {
+    // A TenantRef has no public constructor, so the only way to forge one is a double
+    // assertion through `unknown`. That phrase is banned here rather than merely frowned
+    // at: the guarantee is worth exactly as much as the difficulty of bypassing it.
+    files: ['src/**/*.ts'],
+    rules: {
+      'no-restricted-syntax': [
+        'error',
+        {
+          selector: 'TSAsExpression > TSAsExpression[typeAnnotation.type="TSUnknownKeyword"]',
+          message:
+            'Double assertion through `unknown` is banned in src/. If you are reaching for it to build a TenantRef, mint one in core/law from verified evidence instead.',
+        },
+      ],
+    },
+  },
+  {
+    // tenant-ref.ts is the one place a reference is legitimately constructed.
+    files: ['src/core/law/tenant-ref.ts'],
+    rules: { 'no-restricted-syntax': 'off' },
+  },
+  {
     // Binding-facing frontend code also runs in the browser.
     files: ['src/web/**/*.{ts,tsx}'],
     languageOptions: {

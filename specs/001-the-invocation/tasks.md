@@ -115,8 +115,8 @@ undeliverable — and confirm the record shows each accurately.
 ### Tests for User Story 3
 
 - [X] T033 [P] [US3] Write `tests/unit/classify-failure.test.ts` — 401/403/404 permanent, 429/5xx and network errors transient, `Retry-After` honoured
-- [ ] T034 [P] [US3] Write `tests/integration/idempotency.test.ts` — the same event five times including two concurrently produces exactly one delivery and four `deduped` records
-- [ ] T035 [US3] Write `tests/integration/failure-recording.test.ts` — a permanently failing destination retries **zero** times; a transiently failing one retries and ends `failed`, never `delivered`
+- [X] T034 [P] [US3] Write `tests/integration/idempotency.test.ts` — the same event five times including two concurrently produces exactly one delivery and four `deduped` records
+- [X] T035 [US3] Write `tests/integration/failure-recording.test.ts` — a permanently failing destination retries **zero** times; a transiently failing one retries and ends `failed`, never `delivered`
 
 ### Implementation for User Story 3
 
@@ -124,7 +124,7 @@ undeliverable — and confirm the record shows each accurately.
 - [X] T037 [US3] Implement dedupe in `src/core/logistics/deliver.ts` by claiming `(spell_id, dedupe_key)` **before** delivery, treating the unique violation as `deduped`
 - [X] T038 [P] [US3] Implement permanent-vs-transient classification and bounded backoff in `src/core/logistics/retry.ts`, lifting the predecessor's rule per MIGRATION Tier 1
 - [X] T039 [US3] Implement the per-tenant concurrency cap in `src/core/logistics/deliver.ts` — the fairness mechanism required by FR-019 and Principle III
-- [ ] T040 [P] [US3] Write `tests/integration/spell-independence.test.ts` — two spells match one event, the first fails, the second still delivers (FR-010)
+- [X] T040 [P] [US3] Write `tests/integration/spell-independence.test.ts` — two spells match one event, the first fails, the second still delivers (FR-010)
 
 **Checkpoint**: quickstart scenarios 6–8 pass — duplicates act once, failures record as failures, recovery needs no restart.
 
@@ -145,14 +145,14 @@ no distinguishable signal.
 ### Tests for User Story 2
 
 - [X] T041 [P] [US2] Write `tests/integration/isolation.test.ts` — tenant A's event signed with B's secret, A's event sent to B's registration id, and a body claiming a `tenant_id` it does not own; all refused, nothing delivered to either
-- [ ] T042 [P] [US2] Write `tests/integration/scoping.test.ts` — every repository method, given tenant A, never returns a row owned by B (drive it against both the fake and, if available, a real database)
-- [ ] T043 [US2] Write `tests/integration/enumeration.test.ts` — many samples of unknown-registration versus bad-signature; assert identical status and body, and assert the **median latency difference sits inside the measured noise band** rather than comparing single requests
+- [X] T042 [P] [US2] Write `tests/integration/scoping.test.ts` — every repository method, given tenant A, never returns a row owned by B (drive it against both the fake and, if available, a real database)
+- [X] T043 [US2] Write `tests/integration/enumeration.test.ts` — many samples of unknown-registration versus bad-signature; assert identical status and body, and assert the **median latency difference sits inside the measured noise band** rather than comparing single requests
 
 ### Implementation for User Story 2
 
 - [X] T044 [US2] Implement the decoy-secret path in `src/core/law/authenticate.ts` — when the selector resolves to nothing, verify against a same-length decoy and discard the result, so both branches perform one lookup and one `timingSafeEqual`
 - [X] T045 [US2] Ensure every refusal in `src/server.ts` returns the identical `401` body and status, and that `503` is returned only when the store is unreachable, so the source retries rather than discarding
-- [ ] T046 [US2] Audit every repository call site across `src/` for a `TenantRef` argument derived from verified evidence, and add the lint ban on `as unknown as TenantRef` to `config/eslint.config.js`
+- [X] T046 [US2] Audit every repository call site across `src/` for a `TenantRef` argument derived from verified evidence, and add the lint ban on `as unknown as TenantRef` to `config/eslint.config.js`
 
 **Checkpoint**: quickstart scenarios 4, 5, and 10 pass — every crossing refused, no enumeration signal, a third tenant is data only.
 
@@ -161,8 +161,8 @@ no distinguishable signal.
 ## Phase 6: Polish & Cross-Cutting
 
 - [ ] T047 [P] Add the quickstart driver scripts — `scripts/dev-send.mjs`, `scripts/dev-cross.mjs`, `scripts/dev-probe.mjs` — and register them in `package.json` as `dev:send`, `dev:cross`, `dev:probe`, so the commands in [quickstart.md](./quickstart.md) resolve
-- [ ] T048 [P] Write `tests/integration/tenant-blast-radius.test.ts` — a tenant whose destination, secret, or spell config is broken fails only for that tenant, while another tenant's invocation in the same process still delivers (SC-009)
-- [ ] T049 [P] Write `tests/integration/redaction.test.ts` asserting no secret value reaches a log line or an HTTP response, by deliberately passing a credential through both
+- [X] T048 [P] Write `tests/integration/tenant-blast-radius.test.ts` — a tenant whose destination, secret, or spell config is broken fails only for that tenant, while another tenant's invocation in the same process still delivers (SC-009)
+- [X] T049 [P] Write `tests/integration/redaction.test.ts` asserting no secret value reaches a log line or an HTTP response, by deliberately passing a credential through both
 - [ ] T050 Deploy via `cloudbuild.yaml` to the new Cloud Run service and confirm `/health/ready` is `ready: true`, then run quickstart scenario 1 against the deployed URL with a real GitHub webhook
 - [ ] T051 Update `MIGRATION.md` cutover step 1 to record which infrastructure pieces landed here, and step 3 with the new service name
 
