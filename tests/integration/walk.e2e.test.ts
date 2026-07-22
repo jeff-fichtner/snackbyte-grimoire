@@ -314,10 +314,15 @@ describeIfDb('the invocation, end to end', () => {
 
     const gap = Math.abs(median(unknown) - median(forged));
     const spread = Math.max(median(unknown), median(forged));
-    // The gap must be small relative to the request's own cost. A skipped HMAC would show
-    // as a systematic difference rather than jitter.
-    expect(gap).toBeLessThan(spread);
-  });
+    // The gap must be small relative to the request's own cost. A skipped lookup or a
+    // skipped HMAC shows here as a systematic difference rather than as jitter.
+    expect(
+      gap,
+      `unknown=${median(unknown).toFixed(1)}ms forged=${median(forged).toFixed(1)}ms`,
+    ).toBeLessThan(spread);
+  }, // the default 5s is not enough — and shortening the sample would make the measurement // 80 sequential requests. Against a hosted database each is a network round trip, so
+  // worthless, which is the opposite of the point.
+  120_000);
 
   it('answers a ping without inventing an event', async () => {
     const payload = '{}';
