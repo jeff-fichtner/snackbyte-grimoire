@@ -82,7 +82,7 @@ TENANT — many of everything · owned rows · data
 ├─ SPELLS   stored sentences: one trigger + logic + verb(s) + the nouns they reference.
 │           A tenant's book of spells is their grimoire. Engineer-written spells shipped
 │           as defaults are templates; tenant-written spells are the product.
-└─ NOUNS    owned things: resources (glamours, secrets-by-reference, targets, whitelists)
+└─ NOUNS    owned things: resources (faces, secrets-by-reference, targets, whitelists)
             and records (state, histories, logs)
 ```
 
@@ -129,8 +129,8 @@ always available; speaking _back_ exists only where the trigger opened the chann
 Cross-part constraints that make a spell legal or refusable — the grammar's syntax:
 
 - **Audience agreement** — private speech requires a return channel (an interaction
-  trigger) and the platform's own voice; a glamour can never whisper. No private message
-  from a custom face — structural, not a gap.
+  trigger) and the platform's own voice; a face can never whisper. No private message from
+  a custom face — structural, not a gap.
 - **Authorship agreement** — tenant-authored spells may use charms only. Hexes appear only
   in engineer-authored spells with a human speaker exercising judgment.
 - **Standing agreement** — a spell acting on a member is legal only if the speaker's
