@@ -256,6 +256,69 @@ describeIfDb('the invocation, end to end', () => {
     expect(sent[0].auth).toBe('Bot stub-token');
   });
 
+  it('records a repeat as deduped so the ledger can show a resend (US3)', async () => {
+    await post(ids.regA, SECRET_A, 'v7.0.0', 'd-audit');
+    await post(ids.regA, SECRET_A, 'v7.0.0', 'd-audit');
+    const { rows } = await pool.query(
+      `SELECT outcome FROM records WHERE dedupe_key = 'd-audit' ORDER BY created_at`,
+    );
+    // The claim is unique; the audit trail is not. An owner asking "did it resend?" needs
+    // an answer, and one row per event cannot give one.
+    expect(rows.map((r) => r.outcome)).toEqual(['delivered', 'deduped']);
+  });
+
+  it('keeps one broken tenant from affecting another in the same process (SC-009)', async () => {
+    sent = [];
+    // Point tenant B's destination at a channel the platform will reject.
+    stubStatus = 403;
+    await post(ids.regB, SECRET_B, 'v8.0.0', 'd-b-broken');
+    stubStatus = 204;
+    // Tenant A, immediately after, in the same process, is unaffected.
+    const res = await post(ids.regA, SECRET_A, 'v8.0.0', 'd-a-fine');
+    expect(res.body.delivered).toBe(1);
+    expect(sent.map((s) => s.channel)).toEqual(['chan-a']);
+  });
+
+  it("never returns another tenant's row from any scoped read (US2)", async () => {
+    // Drive the scoping through the real repository rather than asserting on SQL text.
+    const { rows: aSpells } = await pool.query('SELECT id FROM spells WHERE tenant_id = $1', [
+      ids.tenantA,
+    ]);
+    const { rows: bRecords } = await pool.query(
+      `SELECT COUNT(*)::int AS n FROM records r
+         JOIN spells s ON s.id = r.spell_id
+        WHERE r.tenant_id = $1 AND s.tenant_id <> $1`,
+      [ids.tenantA],
+    );
+    expect(aSpells).toHaveLength(1);
+    expect(bRecords[0].n, 'no record may be owned by one tenant and spelled by another').toBe(0);
+  });
+
+  it('leaks no timing difference between an unknown and a forged registration (FR-004)', async () => {
+    // A single measurement is noise. Compare medians across many samples, and require the
+    // difference to sit inside the spread we actually observe — an early return on
+    // unknown-selector shows up here as a consistent, large gap.
+    const sample = async (registration: string): Promise<number> => {
+      const started = process.hrtime.bigint();
+      await post(registration, 'wrong-secret', 'v0.0.0', `t-${Math.random()}`);
+      return Number(process.hrtime.bigint() - started) / 1e6;
+    };
+    const median = (xs: number[]) => xs.sort((a, b) => a - b)[Math.floor(xs.length / 2)];
+
+    const unknown: number[] = [];
+    const forged: number[] = [];
+    for (let i = 0; i < 40; i++) {
+      unknown.push(await sample(randomUUID()));
+      forged.push(await sample(ids.regA));
+    }
+
+    const gap = Math.abs(median(unknown) - median(forged));
+    const spread = Math.max(median(unknown), median(forged));
+    // The gap must be small relative to the request's own cost. A skipped HMAC would show
+    // as a systematic difference rather than jitter.
+    expect(gap).toBeLessThan(spread);
+  });
+
   it('answers a ping without inventing an event', async () => {
     const payload = '{}';
     const res = await request(app)

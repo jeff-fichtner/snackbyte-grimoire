@@ -31,22 +31,38 @@ export interface Verb<Config = unknown> {
   perform(ctx: VerbContext, config: Config): Promise<void>;
 }
 
-const verbs = new Map<string, Verb<never>>();
+/**
+ * A verb whose config type has been forgotten.
+ *
+ * The registry holds verbs with different Config types, and a caller resolving one by key
+ * cannot know which. `parse` is what recovers safety: it takes `unknown` and returns the
+ * shape `perform` requires, so the pair travels together and validation cannot be skipped.
+ * Expressing that here beats asserting the difference away at every registration.
+ */
+export interface RegisteredVerb {
+  readonly key: string;
+  readonly verbClass: VerbClass;
+  readonly needsReturnChannel: boolean;
+  parse(raw: unknown): unknown;
+  perform(ctx: VerbContext, config: never): Promise<void>;
+}
+
+const verbs = new Map<string, RegisteredVerb>();
 
 export function registerVerb<C>(verb: Verb<C>): void {
   if (verbs.has(verb.key)) throw new Error(`verb ${verb.key} is already registered`);
-  verbs.set(verb.key, verb as unknown as Verb<never>);
+  verbs.set(verb.key, verb as RegisteredVerb);
 }
 
-export function getVerb(key: string): Verb<never> | undefined {
+export function getVerb(key: string): RegisteredVerb | undefined {
   return verbs.get(key);
 }
 
-export function allVerbs(): readonly Verb<never>[] {
+export function allVerbs(): readonly RegisteredVerb[] {
   return [...verbs.values()];
 }
 
 /** Verbs a tenant may compose. The composer offers exactly this set and no more. */
-export function composableVerbs(): readonly Verb<never>[] {
+export function composableVerbs(): readonly RegisteredVerb[] {
   return allVerbs().filter((v) => v.verbClass === 'charm');
 }

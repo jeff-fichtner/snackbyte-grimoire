@@ -95,7 +95,7 @@ export async function invoke(
               );
             },
           },
-          verb.parse(spell.verbConfig),
+          verb.parse(spell.verbConfig) as never,
         );
 
         if (outcomeOf.value === 'delivered') outcome.delivered++;
