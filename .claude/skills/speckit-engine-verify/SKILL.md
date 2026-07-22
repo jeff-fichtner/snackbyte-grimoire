@@ -1,0 +1,1 @@
+../../../.specify/extensions/engine/.specify-dev/agent-commands/claude/speckit-engine-verify/SKILL.md

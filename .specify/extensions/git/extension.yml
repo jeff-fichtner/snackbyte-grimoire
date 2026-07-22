@@ -1,0 +1,35 @@
+schema_version: "1.0"
+
+extension:
+  id: git
+  name: "Git Lifecycle"
+  version: "1.0.0"
+  description: "Git operations at Spec Kit lifecycle points: prepare a clean working tree + feature branch before specifying, and checkpoint the feature's spec artifacts before implementation. Merged from the former git-specify-branch and git-commit extensions — both already used the speckit.git.* namespace, and Spec Kit 0.13+ requires one extension id per namespace."
+  author: snackbyte
+  license: MIT
+
+requires:
+  speckit_version: ">=0.2.0"
+
+provides:
+  commands:
+    - name: speckit.git.specify-branch
+      file: commands/speckit.git.specify-branch.md
+      description: "Before /speckit-specify: ensure a clean working area and that the feature is on its own branch"
+    - name: speckit.git.commit
+      file: commands/speckit.git.commit.md
+      description: "Commit the feature's Spec Kit artifacts as a checkpoint before implementation (also reused by close-out)"
+
+hooks:
+  before_specify:
+    command: speckit.git.specify-branch
+    optional: true
+    description: "Ensure a clean working area and feature branch before specifying"
+  before_implement:
+    command: speckit.git.commit
+    optional: true
+    description: "Checkpoint the feature's spec artifacts before implementation"
+
+tags:
+  - "git"
+  - "lifecycle"

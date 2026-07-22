@@ -1,0 +1,37 @@
+name: release
+
+# Tags a release on every push to a channel branch declared in environments.json.
+# The Action tags ONLY — it never creates a commit. Deploy is a separate step, added
+# below the tag step and gated on `is-env`, once there is something to deploy.
+
+on:
+  push:
+    branches: [main, dev]
+
+permissions:
+  contents: write
+
+concurrency:
+  # Serialize per branch so two pushes cannot race for the same build number.
+  group: release-${{ github.ref_name }}
+  cancel-in-progress: false
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          # Full history is required — the derivation refuses a shallow clone, which
+          # would hide existing tags and reuse a number.
+          fetch-depth: 0
+
+      - id: release
+        uses: jeff-fichtner/snackbyte-release-flow-action@v1
+        # Inputs all default: branch=github.ref_name, manifest=./environments.json,
+        # MAJOR.MINOR from package.json, version-strategy=build-id (a deployable
+        # service — the PATCH is a build counter, not a compatibility promise).
+
+      - name: Report the release tag
+        if: steps.release.outputs.is-env == 'true'
+        run: echo "Tagged ${{ steps.release.outputs.tag }}"

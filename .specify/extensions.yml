@@ -1,6 +1,7 @@
 installed:
 - agent-context
-- clickup-sync
+- engine
+- git
 settings:
   auto_execute_hooks: true
 hooks:
@@ -22,29 +23,21 @@ hooks:
     prompt: Execute speckit.agent-context.update?
     description: Refresh agent context after planning
     condition: null
-  - extension: clickup-sync
-    command: speckit.clickup.provision
+  before_specify:
+  - extension: git
+    command: speckit.git.specify-branch
     enabled: true
     optional: true
-    priority: 15
-    prompt: Provision the ClickUp space + shared list for this feature?
-    description: Find-or-create the ClickUp target and record it in the feature manifest
+    priority: 10
+    prompt: Execute speckit.git.specify-branch?
+    description: Ensure a clean working area and feature branch before specifying
     condition: null
-  after_tasks:
-  - extension: clickup-sync
-    command: speckit.clickup.sync
+  before_implement:
+  - extension: git
+    command: speckit.git.commit
     enabled: true
     optional: true
-    priority: 15
-    prompt: Sync this feature's card to ClickUp?
-    description: Mirror the feature-card, US-subtasks, checklist, and status to ClickUp
-    condition: null
-  after_implement:
-  - extension: clickup-sync
-    command: speckit.clickup.sync
-    enabled: true
-    optional: true
-    priority: 15
-    prompt: Sync this feature's card to ClickUp?
-    description: Mirror the feature-card, US-subtasks, checklist, and status to ClickUp
+    priority: 10
+    prompt: Execute speckit.git.commit?
+    description: Checkpoint the feature's spec artifacts before implementation
     condition: null

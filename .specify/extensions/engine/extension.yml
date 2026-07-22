@@ -1,0 +1,30 @@
+schema_version: "1.0"
+
+extension:
+  id: engine
+  name: "Spec Kit Lifecycle Engine"
+  version: "1.0.0"
+  description: "The tracker-agnostic Spec Kit lifecycle engine. Derives a feature's six-state lifecycle (open→in-design→ready→in-development→in-review→done) from repo artifacts, parses tasks.md, maps logical states onto a tracker's real status names (with a three-state fallback), keeps the idempotence manifest, renders commit provenance, and drives the verify + close-out ceremonies. Talks to NO tracker itself — tracker I/O belongs to plugs (e.g. the clickup plug)."
+  author: snackbyte
+  license: MIT
+
+requires:
+  speckit_version: ">=0.2.0"
+
+provides:
+  commands:
+    - name: speckit.engine.verify
+      file: commands/speckit.engine.verify.md
+      description: "Certify a completed feature (recursive code review + unit gate + automatable E2E), then advance it to in-review (US8)"
+    - name: speckit.engine.close
+      file: commands/speckit.engine.close.md
+      description: "Terminal close-out: re-run the gate, surface manual tasks for sign-off, mark done, final sync, commit (US2)"
+
+# verify + close are USER-INVOKED (human-paced): verify is a deliberate certification pass; close
+# waits on sign-off. Neither is wired to an automatic lifecycle hook.
+hooks: {}
+
+tags:
+  - "speckit"
+  - "lifecycle"
+  - "engine"
