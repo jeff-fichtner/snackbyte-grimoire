@@ -1,5 +1,9 @@
+// @vitest-environment node
 /**
  * Guards the release manifest the tagging flow reads.
+ *
+ * Runs in the plain Node environment rather than the jsdom default: this test resolves
+ * repo paths from `import.meta.url`, and jsdom rewrites that to a non-file URL.
  *
  * `environments.json` decides two things on every push: whether the branch is a release
  * channel at all, and what suffix its tag carries. Both failure modes here are silent —
