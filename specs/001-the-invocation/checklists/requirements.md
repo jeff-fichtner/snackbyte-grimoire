@@ -59,6 +59,36 @@ requirement states an observable obligation instead:
 **No [NEEDS CLARIFICATION] markers were needed.** Scope, security posture, and boundaries
 were all determined by `GRIMOIRE.md`, the constitution, and `MIGRATION.md`.
 
+## Review loop
+
+Three passes. Terminated when a pass produced no new unambiguous fix.
+
+**Pass 1 — six fixes.** The two that mattered:
+
+- **A constitutional requirement had no requirement.** Constitution III obliges the single
+  delivery point to arbitrate shared capacity fairly — _"one tenant's burst MUST NOT starve
+  another"_ — and nothing in the spec covered it. Now **FR-019**; the rest of the section
+  renumbered.
+- **`Binding` was used against its meaning.** In `GRIMOIRE.md` a binding is _platform-level_
+  — a whole chat platform mounted onto the model. The spec used it per-community, which
+  would have misled the plan into building one binding per community.
+
+Also: FR-001 gained the obligation to answer the source promptly (only refusals had been
+specified, so the happy path left the source to guess); FR-009's "without collision" became
+concrete; SC-005 now accounts for retries preceding the failure verdict; and the
+store-unreachable edge case now states that liveness survives it, which was the only
+acceptance coverage FR-020 lacked.
+
+**Pass 2 — two fixes.** Removed the `Install` entity introduced in pass 1: establishing an
+install is explicitly out of scope, no requirement referenced it, and an unreferenced entity
+is noise. Story 3's independent test listed four outcomes where FR-017 defines five.
+
+**Pass 3 — clean.** Audited every constitutional principle against the requirements that
+carry it (I, II, III both halves, IV, VI, VII, VIII) — all covered. No vague qualifiers, no
+unreferenced entities, no remaining markers.
+
+**Nothing was left needing a product decision.**
+
 ## Notes
 
 - Items marked incomplete require spec updates before `/speckit-clarify` or `/speckit-plan`
