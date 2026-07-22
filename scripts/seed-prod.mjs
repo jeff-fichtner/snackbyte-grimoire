@@ -158,7 +158,10 @@ try {
         s.source,
         s.eventType,
         JSON.stringify(s.condition),
-        JSON.stringify({ destinationId: resolvedDestinationId, transform: { template: s.template } }),
+        JSON.stringify({
+          destinationId: resolvedDestinationId,
+          transform: { template: s.template },
+        }),
       ],
     );
   }

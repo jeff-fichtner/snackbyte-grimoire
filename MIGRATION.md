@@ -231,6 +231,7 @@ deadline attached, and no work here is gated on it.
    unit tests missed it because none of them asked about a missing fact; one real webhook
    found it in under a minute. **That is the argument for cutting over on real traffic early
    rather than expanding the test suite in isolation.**
+
 5. **Flip the gateway last.** This is the one irreversible moment: two processes on one bot
    token both answer every interaction, so **the gateway is atomic per application**. Rehearse
    against the `snackbyte-dev` application first.
