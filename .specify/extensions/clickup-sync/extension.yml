@@ -1,0 +1,40 @@
+schema_version: "1.0"
+
+extension:
+  id: clickup-sync
+  name: "ClickUp Task Sync"
+  version: "1.0.0"
+  description: "Mirrors each Spec Kit feature into ClickUp as one feature-card (a ClickUp task) in a single shared project list, with a subtask per user story (carrying native dependency links), a markdown checkbox list of the tasks.md lines, a verbose description body, and a status derived from the feature's Spec Kit stage. One-way (repo → ClickUp), idempotent, MCP-only."
+  author: snackbyte
+  license: MIT
+
+requires:
+  speckit_version: ">=0.2.0"
+
+provides:
+  commands:
+    - name: speckit.clickup.provision
+      file: commands/speckit.clickup.provision.md
+      description: "Find-or-create the ClickUp space + shared list and record the target IDs and status mapping in the feature manifest"
+    - name: speckit.clickup.sync
+      file: commands/speckit.clickup.sync.md
+      description: "Make the feature's ClickUp card (body, US-subtasks, checklist, dependencies, status) match the repo; idempotent, one-way"
+
+hooks:
+  after_plan:
+    command: speckit.clickup.provision
+    optional: true
+    description: "Provision the ClickUp target after planning"
+  after_tasks:
+    command: speckit.clickup.sync
+    optional: true
+    description: "Sync the feature-card after task generation"
+  after_implement:
+    command: speckit.clickup.sync
+    optional: true
+    description: "Sync the feature-card after implementation"
+
+tags:
+  - "clickup"
+  - "tracking"
+  - "sync"

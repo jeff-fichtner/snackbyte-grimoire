@@ -1,0 +1,50 @@
+installed:
+- agent-context
+- clickup-sync
+settings:
+  auto_execute_hooks: true
+hooks:
+  after_specify:
+  - extension: agent-context
+    command: speckit.agent-context.update
+    enabled: true
+    optional: true
+    priority: 10
+    prompt: Execute speckit.agent-context.update?
+    description: Refresh agent context after specification
+    condition: null
+  after_plan:
+  - extension: agent-context
+    command: speckit.agent-context.update
+    enabled: true
+    optional: true
+    priority: 10
+    prompt: Execute speckit.agent-context.update?
+    description: Refresh agent context after planning
+    condition: null
+  - extension: clickup-sync
+    command: speckit.clickup.provision
+    enabled: true
+    optional: true
+    priority: 15
+    prompt: Provision the ClickUp space + shared list for this feature?
+    description: Find-or-create the ClickUp target and record it in the feature manifest
+    condition: null
+  after_tasks:
+  - extension: clickup-sync
+    command: speckit.clickup.sync
+    enabled: true
+    optional: true
+    priority: 15
+    prompt: Sync this feature's card to ClickUp?
+    description: Mirror the feature-card, US-subtasks, checklist, and status to ClickUp
+    condition: null
+  after_implement:
+  - extension: clickup-sync
+    command: speckit.clickup.sync
+    enabled: true
+    optional: true
+    priority: 15
+    prompt: Sync this feature's card to ClickUp?
+    description: Mirror the feature-card, US-subtasks, checklist, and status to ClickUp
+    condition: null

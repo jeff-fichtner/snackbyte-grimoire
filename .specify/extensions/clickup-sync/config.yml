@@ -1,0 +1,11 @@
+# ClickUp Task Sync — per-repo configuration.
+#
+# Fill these in for your repo. NO IDs, NO credentials belong here — the connected
+# ClickUp MCP server handles authentication, and runtime ClickUp IDs (workspace / space /
+# list / card / subtask) are resolved into each feature's specs/<feature>/.clickup-sync.json
+# manifest at provision time. This file only names WHERE the shared list should live.
+#
+# Provisioning refuses to run while these still hold the placeholder <...> values.
+
+space: "snackbyte-grimoire" # ClickUp space the shared list lives in
+list: "Features" # the one shared list all feature-cards go into
