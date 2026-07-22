@@ -1,0 +1,44 @@
+{
+  "schemaVersion": "1",
+  "feature": "001-the-invocation",
+  "workspaceId": "90141363864",
+  "spaceId": "90146654042",
+  "listId": "901418355434",
+  "statusMapping": {
+    "open": "backlog",
+    "in-design": "in design",
+    "ready": "ready for development",
+    "in-development": "in development",
+    "in-review": "in review",
+    "done": "shipped"
+  },
+  "card": {
+    "id": "86bb1qmuq",
+    "hash": "sha256:402f6951addbd5d9e2e9b652ebf0a86415a4cfd9e6c735b566f8679d1dd31e8d"
+  },
+  "userStories": [
+    {
+      "us": "US1",
+      "id": "86bb1qn1u",
+      "hash": "sha256:5e2995564eb3a06c38179b3eb907d028f96c47afd21d25f76904acc0807d0f18",
+      "dependsOn": []
+    },
+    {
+      "us": "US3",
+      "id": "86bb1qn4z",
+      "hash": "sha256:b737626ebeca7934667db52adf5c9850458414347fa84eecdc95f9ee27594364",
+      "dependsOn": [
+        "US1"
+      ]
+    },
+    {
+      "us": "US2",
+      "id": "86bb1qn33",
+      "hash": "sha256:d666cb093a8c59d76cfbd843eaa495d4a356c4c8b225111302f6dcec4caa2041",
+      "dependsOn": [
+        "US1",
+        "US3"
+      ]
+    }
+  ]
+}

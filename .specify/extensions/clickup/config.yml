@@ -1,0 +1,42 @@
+# ClickUp plug — per-repo configuration (the ClickUp tracker plug of snackbyte-speckit-engine).
+#
+# Fill these in for your repo. NO IDs, NO credentials belong here — the connected
+# ClickUp MCP server handles authentication, and runtime ClickUp IDs (workspace / space /
+# list / card / subtask) are resolved into each feature's specs/<feature>/.clickup-sync.json
+# manifest at provision time. This file only names WHERE the shared list should live and HOW
+# the engine's six logical states map onto this list's actual status names.
+#
+# Provisioning refuses to run while `space`/`list` still hold the placeholder <...> values.
+#
+# THIS FILE IS DISTRIBUTED SOURCE — it ships with placeholders on purpose. Do not commit real
+# space/list names here: a concrete value defeats the guard above, so a fresh install would
+# silently point at someone else's space instead of refusing. Put YOUR live values in
+# `config.local.yml` beside this file (gitignored); provision and sync read that first and fall
+# back to this file. `config.local.yml` needs only the keys it overrides.
+
+space: "<your-space-name>" # ClickUp space the shared list lives in
+list: "<your-shared-list-name>" # the one shared list all feature-cards go into
+
+# Opt-out: set `enabled: false` to turn ClickUp sync off for this repo (provision + sync then
+# silently no-op and never re-ask). Provision writes this when you decline the sync.
+# enabled: true
+
+# Six-state lifecycle → actual status-name mapping (US3). The engine's logical states are:
+#   open · in-design · ready · in-development · in-review · done
+# Map each to a real status on your list. OPTIONAL — if omitted, provision resolves a best-effort
+# mapping from the list's statuses and records it in the manifest. A list without six distinct
+# statuses degrades to a three-state floor (not-started / in-progress / done); see
+# status-map.sh. Values are your list's ACTUAL status names (no IDs).
+statuses:
+  open: "backlog"
+  in-design: "in design"
+  ready: "ready for development"
+  in-development: "in development"
+  in-review: "in review"
+  done: "shipped"
+
+# NOTE (manifest, not config): the per-feature .clickup-sync.json also gains, additively:
+#   - statusMapping: the six logical→actual names resolved for that feature
+#   - lifecycle: { verifyPassed, closedOut } — markers set by /speckit-engine-verify and /speckit-engine-close
+#   - card.provenanceHash — dedup for commit provenance (US6)
+# See specs/002-clickup-lifecycle/data-model.md. schemaVersion stays "1" (additive changes).
