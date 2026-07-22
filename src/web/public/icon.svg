@@ -1,0 +1,42 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512" role="img" aria-label="Grimoire">
+  <title>Grimoire</title>
+  <!--
+    The app icon, transcribed from design/GrimoireIcon.dc.html — the ring (the circle a
+    spell is cast within) around the stone (the diamond of the topbar mark).
+
+    Geometry note: the design states the ring and the inner outline as CSS borders, which
+    sit INSIDE the box. SVG strokes straddle the path, so each radius here is the design's
+    box minus its border — 312/6 becomes r=153, 388/2 becomes r=193, 70/5 becomes a 65 box.
+    Change the design and re-derive; do not nudge these by eye.
+  -->
+  <defs>
+    <radialGradient id="field" cx="256" cy="163.84" r="614.4" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#211c14" />
+      <stop offset="0.7" stop-color="#12100c" />
+      <stop offset="1" stop-color="#0b0a08" />
+    </radialGradient>
+    <linearGradient id="stone" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#e4c374" />
+      <stop offset="0.48" stop-color="#cda349" />
+      <stop offset="1" stop-color="#a67c2e" />
+    </linearGradient>
+    <filter id="halo" x="-40%" y="-40%" width="180%" height="180%">
+      <feGaussianBlur stdDeviation="18" />
+    </filter>
+    <filter id="cast" x="-40%" y="-40%" width="180%" height="180%">
+      <feDropShadow dx="0" dy="8" stdDeviation="12" flood-color="#000000" flood-opacity="0.6" />
+    </filter>
+  </defs>
+
+  <rect width="512" height="512" fill="url(#field)" />
+
+  <circle cx="256" cy="256" r="193" fill="none" stroke="#cda349" stroke-opacity="0.14" stroke-width="2" />
+
+  <circle cx="256" cy="256" r="153" fill="none" stroke="#cda349" stroke-opacity="0.45" stroke-width="6" filter="url(#halo)" />
+  <circle cx="256" cy="256" r="153" fill="none" stroke="#cda349" stroke-width="6" />
+
+  <g transform="translate(256 256) rotate(45)" filter="url(#cast)">
+    <rect x="-75" y="-75" width="150" height="150" rx="22" fill="url(#stone)" />
+    <rect x="-32.5" y="-32.5" width="65" height="65" rx="9.5" fill="none" stroke="#1a1712" stroke-opacity="0.9" stroke-width="5" />
+  </g>
+</svg>
