@@ -113,3 +113,56 @@ describe('transforms', () => {
     expect(() => parseTransform({ template: 'x'.repeat(4001) })).toThrow(InvalidRule);
   });
 });
+
+describe('an absent fact', () => {
+  /**
+   * A regression suite for a bug that reached production. Each operator used to answer this
+   * question differently — `equals` against `undefined`, `oneOf` against a NUL sentinel, the
+   * pattern forms against `''` — so the obvious way to write "this fact has a value" matched
+   * exactly the events where it did not. These tests exist to keep the three in agreement.
+   */
+  const missing: CanonicalEvent = {
+    source: 'clickup',
+    eventType: 'taskStatusUpdated',
+    dedupeKey: 'history-1',
+    facts: { status: 'backlog' }, // no `status_before` — the shape a task CREATION produces
+  };
+
+  it('reads as the empty string for equals', () => {
+    expect(evaluate(parsePredicate({ op: 'equals', fact: 'nope', value: '' }), missing)).toBe(true);
+  });
+
+  it('reads as the empty string for the pattern forms', () => {
+    expect(evaluate(parsePredicate({ op: 'startsWith', fact: 'nope', value: '' }), missing)).toBe(
+      true,
+    );
+    expect(evaluate(parsePredicate({ op: 'endsWith', fact: 'nope', value: 'x' }), missing)).toBe(
+      false,
+    );
+  });
+
+  it('reads as the empty string for oneOf, so it matches a list only when "" is in it', () => {
+    expect(
+      evaluate(parsePredicate({ op: 'oneOf', fact: 'nope', values: ['a', 'b'] }), missing),
+    ).toBe(false);
+    expect(
+      evaluate(parsePredicate({ op: 'oneOf', fact: 'nope', values: ['', 'b'] }), missing),
+    ).toBe(true);
+  });
+
+  it('DECLINES a task creation via not(equals(status_before, "")) — the bug that shipped', () => {
+    const hasPrevious = parsePredicate({
+      op: 'not',
+      of: { op: 'equals', fact: 'status_before', value: '' },
+    });
+    // A creation carries no previous status, so the spell must not speak.
+    expect(evaluate(hasPrevious, missing)).toBe(false);
+    // A genuine transition does.
+    expect(
+      evaluate(hasPrevious, {
+        ...missing,
+        facts: { status: 'in development', status_before: 'backlog' },
+      }),
+    ).toBe(true);
+  });
+});
