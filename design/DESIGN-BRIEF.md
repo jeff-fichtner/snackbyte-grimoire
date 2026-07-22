@@ -298,12 +298,44 @@ Request-a-verb copy is likewise approved as written, including its framing — *
 a wall — it's a signal… the surest way we learn what to add next is the spell you couldn't
 quite write."*
 
+### Turn 3 — DELIVERED (sections 3a/3b/3c)
+
+- **3a The spell composer** — `WHEN / IF / DO / SEEN BY`, filled from a menu scoped to what
+  is legal. It took the sentence-builder over the form. Hexes are **structurally absent**
+  from the menu rather than disabled; reply verbs are refused in place, with the reason,
+  when the trigger owes no reply.
+- **3b The empty book** — a blank first screen with one clear act, plus three
+  engineer-written spells offered as starting pages.
+- **3c First binding** — install, with ownership **verified rather than claimed** (an
+  unmanaged server shows `needs Manage Server`), closing on "Discord is the first binding —
+  not the whole book."
+
+### Turn 4 — DELIVERED (sections 4a/4b/4c)
+
+- **4a Records + the live trace** — the ledger, and the invocation spine walked for one
+  refused call, stopping at the exact station that turned it away.
+- **4b A spell failing for three days** — undeliverable: the retry timeline, the give-up,
+  and "3 casts are **held, not lost**."
+- **4c The states board** — buttons, status seals, the three refusals, form controls,
+  toasts, confirm-a-hex, skeletons, and the focus ring (gold; rust on irreversible actions).
+
+**Binding rule from 4a — opacity is a security property, not a copy choice.** Where the law
+declines to say whether a caller was unknown or forged, no surface may say either. A more
+"helpful" message would leak exactly what an attacker is probing for. This is now enforced
+by a test, not merely documented.
+
+### Implemented so far
+
+2a (home, tokens, the hex inversion) and 4a (Records, trace, outcome vocabulary), plus 4c's
+focus states. Designed but unbuilt: 2b, 3a, 3b, 3c, 4b, and the rest of 4c.
+
 ### Next
 
-**The spell composer** — probably the most important screen in the product, where the
-agreement rules stop being a description and become an interaction model, and where the
-honest promise ("compose any sentence from this menu; only engineering grows the menu")
-has to be *felt* rather than explained. It gets its own round.
+Unrequested and still open: the **Faces / Secrets / Targets** screens — Secrets is the
+interesting one, a screen whose whole job is managing things it must never display — the
+**Guarantees** page, and a **responsive** answer. The last is a real gap rather than a
+nicety: below 1100px the reading pane hides and nothing replaces it, so a narrow user can
+browse the book but never open a spell.
 
 ---
 
