@@ -78,23 +78,23 @@ signed event; observe the message and a `delivered` record.
 
 ### Tests for User Story 1
 
-- [ ] T019 [P] [US1] Write `tests/unit/logic.test.ts` for the predicate and transform forms — matching, declining, and rejecting an unrecognized shape
-- [ ] T020 [P] [US1] Write `tests/unit/source-github.test.ts` for parse/normalize into a canonical event, including the dedupe key derivation
+- [X] T019 [P] [US1] Write `tests/unit/logic.test.ts` for the predicate and transform forms — matching, declining, and rejecting an unrecognized shape
+- [X] T020 [P] [US1] Write `tests/unit/source-github.test.ts` for parse/normalize into a canonical event, including the dedupe key derivation
 - [ ] T021 [US1] Write `tests/integration/walk.test.ts` driving the whole invocation against the fake repository — event in, message out, `delivered` recorded
 
 ### Implementation for User Story 1
 
-- [ ] T022 [P] [US1] Implement the trigger species registry and the `external_call` species in `src/core/language/triggers/` — `opensReturnChannel: false`
-- [ ] T023 [P] [US1] Implement the one rule language in `src/core/language/logic/` — a typed predicate and a typed transform, total by construction: no eval, no network, no filesystem, no unbounded iteration
-- [ ] T024 [P] [US1] Implement the GitHub source adapter in `src/sources/github/` — lifting the predecessor's parse/normalize logic per [MIGRATION.md](../../MIGRATION.md) Tier 1, with its tests
-- [ ] T025 [US1] Implement `authenticate()` in `src/core/law/authenticate.ts` — HMAC over the **raw request bytes** using `timingSafeEqual`
-- [ ] T026 [US1] Implement `resolveTenant()` in `src/core/law/resolve.ts` — selector → registration → verified `TenantRef`
-- [ ] T027 [P] [US1] Implement the verb registry and the `post_message` charm in `src/core/language/verbs/` — carrying `verbClass: 'charm'` and `needsReturnChannel: false`
-- [ ] T028 [US1] Implement the Discord binding in `src/bindings/discord/` — REST message send, the only file importing `discord.js`. Its client is obtained from `getRest(applicationId)`, which loads the `applications` row and resolves `token_ref`; the binding never reads `DISCORD_BOT_TOKEN` and holds no module-level client (FR-025)
-- [ ] T028a [P] [US1] Write `tests/unit/application-identity.test.ts` — `getRest` resolves a client for a given application id, two ids resolve independently, and no exported surface returns a client without one
-- [ ] T029 [US1] Implement `deliver()` in `src/core/logistics/deliver.ts` — the single chokepoint; happy path only at this stage
-- [ ] T030 [US1] Implement the walk in `src/core/invocation.ts` — trigger → law → spell → logic → verb → nouns → logistics, in that order, each spell handled independently so one failure cannot block another
-- [ ] T031 [US1] Implement `POST /invoke/:registrationId` in `src/server.ts` with `express.raw()` mounted on this route only, verifying **before** parsing, and answering `202` once the record is durably `pending`
+- [X] T022 [P] [US1] Implement the trigger species registry and the `external_call` species in `src/core/language/triggers/` — `opensReturnChannel: false`
+- [X] T023 [P] [US1] Implement the one rule language in `src/core/language/logic/` — a typed predicate and a typed transform, total by construction: no eval, no network, no filesystem, no unbounded iteration
+- [X] T024 [P] [US1] Implement the GitHub source adapter in `src/sources/github/` — lifting the predecessor's parse/normalize logic per [MIGRATION.md](../../MIGRATION.md) Tier 1, with its tests
+- [X] T025 [US1] Implement `authenticate()` in `src/core/law/authenticate.ts` — HMAC over the **raw request bytes** using `timingSafeEqual`
+- [X] T026 [US1] Implement `resolveTenant()` in `src/core/law/resolve.ts` — selector → registration → verified `TenantRef`
+- [X] T027 [P] [US1] Implement the verb registry and the `post_message` charm in `src/core/language/verbs/` — carrying `verbClass: 'charm'` and `needsReturnChannel: false`
+- [X] T028 [US1] Implement the Discord binding in `src/bindings/discord/` — REST message send, the only file importing `discord.js`. Its client is obtained from `getRest(applicationId)`, which loads the `applications` row and resolves `token_ref`; the binding never reads `DISCORD_BOT_TOKEN` and holds no module-level client (FR-025)
+- [X] T028a [P] [US1] Write `tests/unit/application-identity.test.ts` — `getRest` resolves a client for a given application id, two ids resolve independently, and no exported surface returns a client without one
+- [X] T029 [US1] Implement `deliver()` in `src/core/logistics/deliver.ts` — the single chokepoint; happy path only at this stage
+- [X] T030 [US1] Implement the walk in `src/core/invocation.ts` — trigger → law → spell → logic → verb → nouns → logistics, in that order, each spell handled independently so one failure cannot block another
+- [X] T031 [US1] Implement `POST /invoke/:registrationId` in `src/server.ts` with `express.raw()` mounted on this route only, verifying **before** parsing, and answering `202` once the record is durably `pending`
 - [ ] T032 [US1] Add `scripts/seed-dev.mjs` (registered as `npm run seed:dev`) creating **two** tenants with their own registrations, spells, and destinations — one tenant cannot demonstrate the property US2 exists to prove
 
 **Checkpoint**: quickstart scenarios 1–3 pass — a spell speaks, an edit takes effect with no restart, a condition declines and is recorded as `declined`.
@@ -114,16 +114,16 @@ undeliverable — and confirm the record shows each accurately.
 
 ### Tests for User Story 3
 
-- [ ] T033 [P] [US3] Write `tests/unit/classify-failure.test.ts` — 401/403/404 permanent, 429/5xx and network errors transient, `Retry-After` honoured
+- [X] T033 [P] [US3] Write `tests/unit/classify-failure.test.ts` — 401/403/404 permanent, 429/5xx and network errors transient, `Retry-After` honoured
 - [ ] T034 [P] [US3] Write `tests/integration/idempotency.test.ts` — the same event five times including two concurrently produces exactly one delivery and four `deduped` records
 - [ ] T035 [US3] Write `tests/integration/failure-recording.test.ts` — a permanently failing destination retries **zero** times; a transiently failing one retries and ends `failed`, never `delivered`
 
 ### Implementation for User Story 3
 
-- [ ] T036 [US3] Implement the two-write record lifecycle — `pending` claimed before the attempt, settled to a terminal outcome after — in `src/core/logistics/deliver.ts`
-- [ ] T037 [US3] Implement dedupe in `src/core/logistics/deliver.ts` by claiming `(spell_id, dedupe_key)` **before** delivery, treating the unique violation as `deduped`
-- [ ] T038 [P] [US3] Implement permanent-vs-transient classification and bounded backoff in `src/core/logistics/retry.ts`, lifting the predecessor's rule per MIGRATION Tier 1
-- [ ] T039 [US3] Implement the per-tenant concurrency cap in `src/core/logistics/deliver.ts` — the fairness mechanism required by FR-019 and Principle III
+- [X] T036 [US3] Implement the two-write record lifecycle — `pending` claimed before the attempt, settled to a terminal outcome after — in `src/core/logistics/deliver.ts`
+- [X] T037 [US3] Implement dedupe in `src/core/logistics/deliver.ts` by claiming `(spell_id, dedupe_key)` **before** delivery, treating the unique violation as `deduped`
+- [X] T038 [P] [US3] Implement permanent-vs-transient classification and bounded backoff in `src/core/logistics/retry.ts`, lifting the predecessor's rule per MIGRATION Tier 1
+- [X] T039 [US3] Implement the per-tenant concurrency cap in `src/core/logistics/deliver.ts` — the fairness mechanism required by FR-019 and Principle III
 - [ ] T040 [P] [US3] Write `tests/integration/spell-independence.test.ts` — two spells match one event, the first fails, the second still delivers (FR-010)
 
 **Checkpoint**: quickstart scenarios 6–8 pass — duplicates act once, failures record as failures, recovery needs no restart.
@@ -144,14 +144,14 @@ no distinguishable signal.
 
 ### Tests for User Story 2
 
-- [ ] T041 [P] [US2] Write `tests/integration/isolation.test.ts` — tenant A's event signed with B's secret, A's event sent to B's registration id, and a body claiming a `tenant_id` it does not own; all refused, nothing delivered to either
+- [X] T041 [P] [US2] Write `tests/integration/isolation.test.ts` — tenant A's event signed with B's secret, A's event sent to B's registration id, and a body claiming a `tenant_id` it does not own; all refused, nothing delivered to either
 - [ ] T042 [P] [US2] Write `tests/integration/scoping.test.ts` — every repository method, given tenant A, never returns a row owned by B (drive it against both the fake and, if available, a real database)
 - [ ] T043 [US2] Write `tests/integration/enumeration.test.ts` — many samples of unknown-registration versus bad-signature; assert identical status and body, and assert the **median latency difference sits inside the measured noise band** rather than comparing single requests
 
 ### Implementation for User Story 2
 
-- [ ] T044 [US2] Implement the decoy-secret path in `src/core/law/authenticate.ts` — when the selector resolves to nothing, verify against a same-length decoy and discard the result, so both branches perform one lookup and one `timingSafeEqual`
-- [ ] T045 [US2] Ensure every refusal in `src/server.ts` returns the identical `401` body and status, and that `503` is returned only when the store is unreachable, so the source retries rather than discarding
+- [X] T044 [US2] Implement the decoy-secret path in `src/core/law/authenticate.ts` — when the selector resolves to nothing, verify against a same-length decoy and discard the result, so both branches perform one lookup and one `timingSafeEqual`
+- [X] T045 [US2] Ensure every refusal in `src/server.ts` returns the identical `401` body and status, and that `503` is returned only when the store is unreachable, so the source retries rather than discarding
 - [ ] T046 [US2] Audit every repository call site across `src/` for a `TenantRef` argument derived from verified evidence, and add the lint ban on `as unknown as TenantRef` to `config/eslint.config.js`
 
 **Checkpoint**: quickstart scenarios 4, 5, and 10 pass — every crossing refused, no enumeration signal, a third tenant is data only.

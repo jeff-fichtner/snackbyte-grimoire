@@ -140,6 +140,16 @@ export class FakeRepository implements Repository {
     });
   }
 
+  async recordDeduped(tenant: TenantRef, input: RecordInput): Promise<void> {
+    this.live();
+    this.records.push({
+      ...input,
+      id: String(this.nextId++),
+      tenantId: tenantId(tenant),
+      outcome: 'deduped',
+    });
+  }
+
   async ping(): Promise<boolean> {
     return !this.unavailable;
   }

@@ -114,10 +114,22 @@ CREATE TABLE records (
   CONSTRAINT records_outcome_closed CHECK (
     outcome IN ('pending', 'delivered', 'deduped', 'declined', 'refused', 'failed')
   ),
-  -- The concurrency arbiter. Claimed BEFORE delivery is attempted, so two concurrent
-  -- copies of one event cannot both deliver: the database serializes the claim, where a
-  -- check-then-act in application code has a race window open exactly during a retry storm.
-  UNIQUE (spell_id, dedupe_key)
+  CONSTRAINT records_dedupe_key_present CHECK (dedupe_key <> '')
 );
+
+-- The concurrency arbiter — and note it is PARTIAL.
+--
+-- Claimed BEFORE delivery is attempted, so two concurrent copies of one event cannot both
+-- deliver: the database serializes the claim, where a check-then-act in application code has
+-- a race window open exactly during a provider's retry storm.
+--
+-- It excludes 'deduped' deliberately. A plain UNIQUE would enforce once-only AND make it
+-- impossible to record that a repeat arrived — but the ledger has to show the repeat, or an
+-- owner asking "did GitHub resend that?" has no answer. So the CLAIM is unique and the
+-- audit trail is not. (The predecessor learned this the same way and shipped it as a
+-- separate migration.)
+CREATE UNIQUE INDEX records_one_claim_per_event
+  ON records (spell_id, dedupe_key)
+  WHERE outcome <> 'deduped';
 
 CREATE INDEX records_recent ON records (tenant_id, created_at DESC);
