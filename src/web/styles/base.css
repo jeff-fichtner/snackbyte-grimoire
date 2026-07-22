@@ -59,3 +59,18 @@ button {
   letter-spacing: var(--label-tracking);
   text-transform: uppercase;
 }
+
+/**
+ * Focus is visible on every interactive element, always — a keyboard user must be able to
+ * see where they are. Gold by default; rust wherever the control performs something
+ * irreversible, so the ring itself carries the warning.
+ */
+:where(button, a, [tabindex], input, select, textarea):focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(205, 163, 73, 0.2);
+  border-radius: var(--radius-sm);
+}
+
+:where(.danger-action):focus-visible {
+  box-shadow: 0 0 0 3px rgba(187, 102, 71, 0.2);
+}

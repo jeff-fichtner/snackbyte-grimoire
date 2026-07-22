@@ -1,0 +1,165 @@
+.pane {
+  width: 392px;
+  flex-shrink: 0;
+  border-left: 1px solid var(--line);
+  background: var(--panel);
+  padding: 26px;
+}
+
+.eyebrow {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: var(--label-tracking);
+  text-transform: uppercase;
+  color: var(--ink-6);
+  margin-bottom: 8px;
+}
+
+.title {
+  margin: 0 0 6px;
+  font-family: var(--font-serif);
+  font-size: 22px;
+  font-weight: 600;
+  color: var(--ink-1);
+}
+
+.summary {
+  margin: 0 0 24px;
+  font-size: 13px;
+  line-height: 1.55;
+  color: var(--ink-5);
+}
+
+.walk {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.station {
+  display: flex;
+  gap: 14px;
+  padding-bottom: 20px;
+  position: relative;
+}
+
+/* the spine itself, drawn between pips */
+.station:not(:last-child)::before {
+  content: '';
+  position: absolute;
+  left: 4px;
+  top: 16px;
+  bottom: 0;
+  width: 1px;
+  background: var(--line-strong);
+}
+
+.pip {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  margin-top: 4px;
+  flex-shrink: 0;
+  position: relative;
+  z-index: 1;
+}
+
+.language {
+  background: var(--language);
+}
+
+.law {
+  background: var(--gold);
+}
+
+.tenant {
+  background: var(--parchment);
+}
+
+.logistics {
+  background: var(--guarantee);
+}
+
+/* a station the walk never got to is dimmed and its pip hollowed */
+.not-reached .pip {
+  background: transparent;
+  border: 1px solid var(--ink-7);
+}
+
+.not-reached .stationName,
+.not-reached .stationDetail {
+  color: var(--ink-7);
+}
+
+.refused .pip {
+  box-shadow: 0 0 0 3px rgba(205, 163, 73, 0.2);
+}
+
+.stationBody {
+  min-width: 0;
+}
+
+.stationName {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--ink-2);
+  margin-bottom: 3px;
+}
+
+.refused > .stationBody > .stationName {
+  color: var(--ink-1);
+}
+
+.refused .refused,
+.stationName .refused {
+  font-size: 9.5px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--gold-soft);
+  border: 1px solid rgba(205, 163, 73, 0.34);
+  background: rgba(205, 163, 73, 0.1);
+  border-radius: 3px;
+  padding: 1px 6px;
+}
+
+.stationDetail {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  line-height: 1.6;
+  color: var(--ink-5);
+}
+
+.note {
+  margin: 10px 0 0;
+  padding: 10px 12px;
+  border-left: 2px solid rgba(205, 163, 73, 0.34);
+  background: rgba(205, 163, 73, 0.05);
+  font-size: 12px;
+  line-height: 1.6;
+  color: var(--ink-3);
+}
+
+.footer {
+  margin: 6px 0 0;
+  padding-top: 16px;
+  border-top: 1px solid var(--line-faint);
+  font-size: 12px;
+  line-height: 1.7;
+  color: var(--ink-5);
+}
+
+.kind {
+  color: var(--gold-soft);
+  font-weight: 600;
+}
+
+@media (max-width: 1200px) {
+  .pane {
+    display: none;
+  }
+}
