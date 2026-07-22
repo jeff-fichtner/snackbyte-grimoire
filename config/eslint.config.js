@@ -19,6 +19,31 @@ export default tseslint.config(
     },
   },
   {
+    // The dependency runs binding -> core, never the reverse. Core defines the interfaces;
+    // a binding implements them and is injected at the composition root. Enforced rather
+    // than trusted: the predecessor inverted this and only discovered the cost when a
+    // second platform was considered.
+    files: ['src/core/**/*.ts'],
+    rules: {
+      'no-restricted-imports': [
+        'error',
+        {
+          patterns: [
+            {
+              group: ['**/bindings/*', '**/bindings/**'],
+              message:
+                'core must not import a binding. Define the interface in core and inject the implementation at the composition root.',
+            },
+            {
+              group: ['discord.js', 'discord.js/*'],
+              message: 'core names no platform. discord.js belongs only in src/bindings/discord/.',
+            },
+          ],
+        },
+      ],
+    },
+  },
+  {
     // Binding-facing frontend code also runs in the browser.
     files: ['src/web/**/*.{ts,tsx}'],
     languageOptions: {
