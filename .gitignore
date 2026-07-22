@@ -12,3 +12,6 @@ coverage/
 # Markdown stays the source of truth; regenerate with `spec-render`, remove with
 # `spec-render --clean`.
 specs/**/*.html
+
+# Extension local config — real space/list names, never the shipped placeholders
+.specify/extensions/*/config.local.yml

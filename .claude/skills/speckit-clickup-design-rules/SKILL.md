@@ -1,0 +1,1 @@
+../../../.specify/extensions/clickup/.specify-dev/agent-commands/claude/speckit-clickup-design-rules/SKILL.md

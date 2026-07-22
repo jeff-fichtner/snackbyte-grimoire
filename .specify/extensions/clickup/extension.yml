@@ -1,0 +1,64 @@
+schema_version: "1.0"
+
+extension:
+  # Must equal the namespace of every command below: Spec Kit rejects the install
+  # outright ("must use extension namespace") unless each primary command matches
+  # `speckit.<id>.<verb>`. The commands have always been `speckit.clickup.*`, so
+  # the id is `clickup` and the install directory follows it. Do not rename this
+  # back to `clickup-sync` without renaming every command with it.
+  id: clickup
+  name: "ClickUp Plug"
+  version: "2.0.0"
+  description: "The ClickUp tracker plug for snackbyte-speckit-engine. Mirrors each Spec Kit feature into ClickUp as one feature-card in a shared list, with a subtask per user story (native dependency links), a markdown checkbox list of the tasks.md lines, a verbose body, and the engine's six-state lifecycle status (open→in-design→ready→in-development→in-review→done) advancing on every command. One-way (repo → ClickUp), idempotent, MCP-only. All deterministic lifecycle logic lives in the `engine` extension; this plug only orchestrates ClickUp MCP calls."
+  author: snackbyte
+  license: MIT
+
+requires:
+  speckit_version: ">=0.2.0"
+  # This plug calls the engine's helpers at .specify/extensions/engine/scripts/bash/*.sh.
+  # Install `engine` alongside it.
+  extensions:
+    - engine
+
+provides:
+  commands:
+    - name: speckit.clickup.provision
+      file: commands/speckit.clickup.provision.md
+      description: "Find-or-create the ClickUp space + shared list, record targets + the six-state status mapping, and create the feature-card in `open`"
+    - name: speckit.clickup.sync
+      file: commands/speckit.clickup.sync.md
+      description: "Make the feature's card (body, US-subtasks, checklist, dependencies, six-state status) match the repo; idempotent, one-way; runs on every command"
+    - name: speckit.clickup.design-rules
+      file: commands/speckit.clickup.design-rules.md
+      description: "Inspect the real workspace and propose a project-specific sync ruleset for approval; defaults apply when absent (US7)"
+
+hooks:
+  after_specify:
+    command: speckit.clickup.sync
+    optional: true
+    description: "Sync the feature-card after specify (→ in-design)"
+  after_plan:
+    command: speckit.clickup.provision
+    optional: true
+    description: "Provision the ClickUp target after planning (card created in open)"
+  after_tasks:
+    command: speckit.clickup.sync
+    optional: true
+    description: "Sync the feature-card after task generation (→ ready)"
+  after_analyze:
+    command: speckit.clickup.sync
+    optional: true
+    description: "Sync the feature-card after analyze (→ ready)"
+  after_implement:
+    command: speckit.clickup.sync
+    optional: true
+    description: "Sync the feature-card after implementation (→ in-development)"
+  after_converge:
+    command: speckit.clickup.sync
+    optional: true
+    description: "Re-sync after converge (stays in-development until /speckit-engine-verify passes)"
+
+tags:
+  - "clickup"
+  - "tracking"
+  - "sync"

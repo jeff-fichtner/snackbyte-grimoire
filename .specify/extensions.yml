@@ -1,6 +1,7 @@
 installed:
 - agent-context
 - analyze-autofix
+- clickup
 - engine
 - git
 - specify-review-loop
@@ -24,6 +25,14 @@ hooks:
     prompt: Execute speckit.specify-review-loop.run?
     description: Recursively review the spec and fix unambiguous issues
     condition: null
+  - extension: clickup
+    command: speckit.clickup.sync
+    enabled: true
+    optional: true
+    priority: 10
+    prompt: Execute speckit.clickup.sync?
+    description: Sync the feature-card after specify (→ in-design)
+    condition: null
   after_plan:
   - extension: agent-context
     command: speckit.agent-context.update
@@ -32,6 +41,14 @@ hooks:
     priority: 10
     prompt: Execute speckit.agent-context.update?
     description: Refresh agent context after planning
+    condition: null
+  - extension: clickup
+    command: speckit.clickup.provision
+    enabled: true
+    optional: true
+    priority: 10
+    prompt: Execute speckit.clickup.provision?
+    description: Provision the ClickUp target after planning (card created in open)
     condition: null
   before_specify:
   - extension: git
@@ -59,4 +76,40 @@ hooks:
     priority: 10
     prompt: Execute speckit.analyze-autofix.run?
     description: Apply unambiguous analysis fixes and re-present results
+    condition: null
+  - extension: clickup
+    command: speckit.clickup.sync
+    enabled: true
+    optional: true
+    priority: 10
+    prompt: Execute speckit.clickup.sync?
+    description: Sync the feature-card after analyze (→ ready)
+    condition: null
+  after_tasks:
+  - extension: clickup
+    command: speckit.clickup.sync
+    enabled: true
+    optional: true
+    priority: 10
+    prompt: Execute speckit.clickup.sync?
+    description: Sync the feature-card after task generation (→ ready)
+    condition: null
+  after_implement:
+  - extension: clickup
+    command: speckit.clickup.sync
+    enabled: true
+    optional: true
+    priority: 10
+    prompt: Execute speckit.clickup.sync?
+    description: Sync the feature-card after implementation (→ in-development)
+    condition: null
+  after_converge:
+  - extension: clickup
+    command: speckit.clickup.sync
+    enabled: true
+    optional: true
+    priority: 10
+    prompt: Execute speckit.clickup.sync?
+    description: Re-sync after converge (stays in-development until /speckit-engine-verify
+      passes)
     condition: null

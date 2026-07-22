@@ -72,6 +72,22 @@
       },
       "registered_skills": [],
       "installed_at": "2026-07-22T03:50:28.270290+00:00"
+    },
+    "clickup": {
+      "version": "2.0.0",
+      "source": "local",
+      "manifest_hash": "sha256:bd09f4e826ee8d6200e4d06520e926d57eacb158b44a2532f00df865960a838f",
+      "enabled": true,
+      "priority": 10,
+      "registered_commands": {
+        "claude": [
+          "speckit.clickup.provision",
+          "speckit.clickup.sync",
+          "speckit.clickup.design-rules"
+        ]
+      },
+      "registered_skills": [],
+      "installed_at": "2026-07-22T06:42:37.043463+00:00"
     }
   }
 }
