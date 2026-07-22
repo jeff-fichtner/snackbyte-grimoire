@@ -1,0 +1,50 @@
+.seal {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.04em;
+  padding: 3px 9px;
+  border-radius: 3px;
+  border: 1px solid var(--line-strong);
+  color: var(--ink-5);
+  white-space: nowrap;
+}
+
+.qualifier {
+  color: var(--ink-6);
+}
+
+/* performed, and recorded */
+.delivered {
+  color: var(--guarantee);
+  border-color: rgba(134, 160, 111, 0.34);
+  background: rgba(134, 160, 111, 0.08);
+}
+
+/* correctly declined to act twice — a success, not a failure */
+.deduped {
+  color: var(--guarantee);
+  border-color: rgba(134, 160, 111, 0.24);
+}
+
+/* the law turned it away — the law's own colour */
+.refused {
+  color: var(--gold-soft);
+  border-color: rgba(205, 163, 73, 0.34);
+  background: rgba(205, 163, 73, 0.08);
+}
+
+/* in flight, backing off */
+.retrying {
+  color: var(--gold-dim);
+  border-color: rgba(205, 163, 73, 0.24);
+}
+
+/* retries exhausted — the casts are held, never dropped */
+.gave-up {
+  color: var(--danger-bright);
+  border-color: rgba(187, 102, 71, 0.4);
+  background: rgba(187, 102, 71, 0.1);
+}

@@ -1,0 +1,148 @@
+.main {
+  flex: 1;
+  min-width: 0;
+  padding: 26px 30px;
+}
+
+.title {
+  margin: 0;
+  font-family: var(--font-serif);
+  font-size: 28px;
+  font-weight: 600;
+  color: var(--ink-1);
+}
+
+.subtitle {
+  margin: 4px 0 0;
+  font-family: var(--font-serif);
+  font-style: italic;
+  font-size: 14px;
+  color: var(--ink-5);
+}
+
+.promise {
+  margin: 14px 0 22px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--ink-6);
+}
+
+.filters {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 18px;
+}
+
+.filter {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  padding: 6px 12px;
+  border-radius: 6px;
+  border: 1px solid var(--line-strong);
+  background: transparent;
+  color: var(--ink-5);
+}
+
+.filter:hover {
+  color: var(--ink-2);
+  background: rgba(232, 224, 208, 0.04);
+}
+
+.filterOn {
+  color: var(--gold-bright);
+  border-color: rgba(205, 163, 73, 0.34);
+  background: rgba(205, 163, 73, 0.12);
+}
+
+.ledger {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.ledger th {
+  text-align: left;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: var(--label-tracking);
+  text-transform: uppercase;
+  color: var(--ink-6);
+  font-weight: 400;
+  padding: 0 0 10px;
+  border-bottom: 1px solid var(--line);
+}
+
+.ledger td {
+  padding: 14px 0;
+  border-bottom: 1px solid var(--line);
+  vertical-align: top;
+}
+
+.openable {
+  cursor: pointer;
+}
+
+.openable:hover {
+  background: rgba(232, 224, 208, 0.03);
+}
+
+.open {
+  background: rgba(205, 163, 73, 0.05);
+}
+
+.time {
+  width: 96px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--ink-6);
+}
+
+.invocation {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  padding-right: 20px;
+}
+
+.spellName {
+  font-family: var(--font-serif);
+  font-size: 15px;
+  color: var(--ink-2);
+}
+
+.noSpell {
+  font-family: var(--font-sans);
+  font-size: 13px;
+  font-style: italic;
+  color: var(--ink-5);
+}
+
+.detail {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--ink-5);
+}
+
+.turnedAway {
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  color: var(--gold-dim);
+}
+
+.outcome {
+  width: 170px;
+  text-align: right;
+}
+
+@media (max-width: 760px) {
+  .main {
+    padding: 20px 16px;
+  }
+
+  .time {
+    width: 68px;
+  }
+
+  .outcome {
+    width: auto;
+  }
+}

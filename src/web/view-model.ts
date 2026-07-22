@@ -83,3 +83,58 @@ export interface Tenant {
   spellCount: number;
   castingToday: number;
 }
+
+/**
+ * What became of one invocation.
+ *
+ * These are the outcomes the ledger reports, and they are the three refusals plus the
+ * ways a delivery can end. The vocabulary is closed on purpose: a surface that invents a
+ * fourth outcome is claiming something the platform never promised.
+ */
+export type Outcome =
+  /** performed, and recorded */
+  | 'delivered'
+  /** the law turned it away at the door — unspeakable */
+  | 'refused'
+  /** already done; the same event never acts twice */
+  | 'deduped'
+  /** in flight, backing off */
+  | 'retrying'
+  /** retries exhausted. The casts are held, never silently dropped */
+  | 'gave-up';
+
+/** One line of the ledger. */
+export interface Record_ {
+  id: string;
+  time: string;
+  /** The spell that ran, or null when the law refused before any spell was reached. */
+  spellName: string | null;
+  /** What arrived, in the tenant's language. */
+  detail: string;
+  outcome: Outcome;
+  /** Shown beside the outcome — "3/6", "law", "skipped". */
+  qualifier?: string;
+  /** Present when this record can be walked in the trace pane. */
+  traceId?: string;
+}
+
+/** One station of the invocation walk, as the trace shows it. */
+export interface TraceStation {
+  name: string;
+  /** Which platform branch owns this station — it carries the station's colour. */
+  branch: 'language' | 'law' | 'tenant' | 'logistics';
+  state: 'passed' | 'refused' | 'not-reached';
+  detail: string;
+  /** An explanation shown only where the walk stopped. */
+  note?: string;
+}
+
+export interface Trace {
+  id: string;
+  time: string;
+  title: string;
+  summary: string;
+  stations: TraceStation[];
+  /** Which of the three refusals this was, named plainly. */
+  refusalKind?: 'ungrammatical' | 'unspeakable' | 'undeliverable';
+}

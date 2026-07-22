@@ -6,7 +6,7 @@
  * surface. When real data arrives, these values are replaced — the components take props
  * and neither know nor care where they came from.
  */
-import type { NounCount, Spell, SpellPage, Tenant } from './view-model';
+import type { NounCount, Record_, Spell, SpellPage, Tenant, Trace } from './view-model';
 
 export const tenant: Tenant = {
   name: 'Ashfall Guild',
@@ -182,5 +182,93 @@ export const spellPages: Record<string, SpellPage> = {
     guarantees: [],
     sealedNote:
       'Hexes cannot be composed by tenants. This one exists as an engineer-authored spell, cast only by a human with standing — never automated.',
+  },
+};
+
+export const records: Record_[] = [
+  {
+    id: 'r1',
+    time: '10:42:07',
+    spellName: null,
+    detail: 'external call · /webhooks/…/clickup',
+    outcome: 'refused',
+    qualifier: 'law',
+    traceId: 't1',
+  },
+  {
+    id: 'r2',
+    time: '10:41:55',
+    spellName: '/spank',
+    detail: 'reply at @grib',
+    outcome: 'delivered',
+  },
+  {
+    id: 'r3',
+    time: '10:38:12',
+    spellName: 'Relay the deployment',
+    detail: 'release v2.4.0',
+    outcome: 'deduped',
+    qualifier: 'skipped',
+  },
+  {
+    id: 'r4',
+    time: '10:31:40',
+    spellName: 'Crown the patrons',
+    detail: 'grant @patron',
+    outcome: 'retrying',
+    qualifier: '3/6',
+  },
+  {
+    id: 'r5',
+    time: '10:22:03',
+    spellName: 'Welcome the newly arrived',
+    detail: '@lark joined',
+    outcome: 'delivered',
+  },
+  {
+    id: 'r6',
+    time: '07:58:19',
+    spellName: 'Crown the patrons',
+    detail: 'grant @patron',
+    outcome: 'gave-up',
+    qualifier: 'held',
+  },
+];
+
+export const traces: Record<string, Trace> = {
+  t1: {
+    id: 't1',
+    time: '10:42:07',
+    title: 'Refused at the law',
+    summary: 'One invocation, walked across the whole grammar — and where it stopped.',
+    refusalKind: 'unspeakable',
+    stations: [
+      {
+        name: 'trigger',
+        branch: 'language',
+        state: 'passed',
+        detail: 'an external call arrived on a tenant path',
+      },
+      {
+        name: 'law admits',
+        branch: 'law',
+        state: 'refused',
+        detail: 'unrecognized or unauthenticated caller',
+        note: "We can't tell you which. An unknown caller and a forged one look identical here — and that is the point: a wrong guess must learn nothing.",
+      },
+      {
+        name: 'spell · logic · verb',
+        branch: 'tenant',
+        state: 'not-reached',
+        detail: 'not reached',
+      },
+      { name: 'nouns', branch: 'tenant', state: 'not-reached', detail: 'not reached' },
+      {
+        name: 'logistics performs',
+        branch: 'logistics',
+        state: 'not-reached',
+        detail: 'nothing was delivered — correctly',
+      },
+    ],
   },
 };

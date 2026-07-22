@@ -13,11 +13,13 @@ export function Shell({
   tenantName,
   nouns,
   active,
+  onNavigate,
   children,
 }: {
   tenantName: string;
   nouns: NounCount[];
   active: string;
+  onNavigate: (section: string) => void;
   children: ReactNode;
 }) {
   return (
@@ -49,9 +51,10 @@ export function Shell({
       <div className={styles.body}>
         <nav className={styles.sidebar} aria-label="Sections">
           {nouns.map((noun) => (
-            <a
+            <button
               key={noun.label}
-              href={`#${noun.label.toLowerCase()}`}
+              type="button"
+              onClick={() => onNavigate(noun.label)}
               className={
                 noun.label === active ? `${styles.navItem} ${styles.navActive}` : styles.navItem
               }
@@ -62,16 +65,24 @@ export function Shell({
               </span>
               <span className={styles.navLabel}>{noun.label}</span>
               {noun.count !== undefined && <span className={styles.navCount}>{noun.count}</span>}
-            </a>
+            </button>
           ))}
 
           <div className={styles.navGroup}>
-            <a href="#grammar" className={styles.navSecondary}>
+            <button
+              type="button"
+              className={styles.navSecondary}
+              onClick={() => onNavigate('Grammar')}
+            >
               Grammar
-            </a>
-            <a href="#guarantees" className={styles.navSecondary}>
+            </button>
+            <button
+              type="button"
+              className={styles.navSecondary}
+              onClick={() => onNavigate('Guarantees')}
+            >
               Guarantees
-            </a>
+            </button>
           </div>
 
           <div className={styles.binding}>
