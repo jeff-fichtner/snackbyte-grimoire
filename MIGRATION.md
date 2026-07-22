@@ -206,8 +206,31 @@ deadline attached, and no work here is gated on it.
    moving one webhook at a time, and rolling back, both require the old service to keep
    serving untouched while the new one takes traffic.
 
+   **The deploy path itself was the last thing to become real.** Staging was hand-deployed
+   three times with `gcloud run deploy --source` before anyone ran CI, so `cloudbuild.yaml`
+   described a deployment nobody had performed — and described it wrongly: it defaulted the
+   service to the bare production name and hardcoded secrets whose names read as production
+   but held staging values. A CI deploy would have created production wired to staging's
+   database, silently. Every environment-varying value is now a required substitution with
+   no default, the branch→environment mapping lives in `release.yml`, and an unmapped branch
+   is a hard failure. _(Proven 2026-07-22: `v0.2.0-dev` built and deployed
+   `grimoire-staging-00004` through CI, then a push to `dev` deployed `v0.2.1-dev`
+   unattended.)_ The lesson generalises: a config that has never executed is not
+   infrastructure, it is a guess.
+
 4. **Cut inbound over per source** — a webhook is a URL, so ClickUp moves, gets watched, then
-   GitHub. Each is independently reversible.
+   GitHub. Each is independently reversible. _(Done, 2026-07-22.)_ Both moved: ClickUp by
+   repointing the existing workspace webhook (its secret is minted by ClickUp and survives an
+   endpoint change, so a PUT preserves it where a POST would silently invalidate it), GitHub
+   by creating a new hook on this repo and deleting the predecessor's. Both verified with
+   real, source-signed traffic reaching `#grimoire`.
+
+   Cutting ClickUp over is also what exposed a live defect in the rule language: `equals`,
+   `oneOf`, and the pattern forms each treated an absent fact differently, so the obvious way
+   to write "this fact has a value" matched precisely the events where it did not. Seventy
+   unit tests missed it because none of them asked about a missing fact; one real webhook
+   found it in under a minute. **That is the argument for cutting over on real traffic early
+   rather than expanding the test suite in isolation.**
 5. **Flip the gateway last.** This is the one irreversible moment: two processes on one bot
    token both answer every interaction, so **the gateway is atomic per application**. Rehearse
    against the `snackbyte-dev` application first.
