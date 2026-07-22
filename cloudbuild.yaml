@@ -79,6 +79,13 @@ steps:
       - '--platform=managed'
       # Always-on: the service holds connections and must not cold-start on every event.
       - '--min-instances=1'
+      # Public at the transport layer ON PURPOSE. A webhook source (GitHub, ClickUp) cannot
+      # present a Google IAM identity, so the service must accept anonymous invocation — and
+      # the app does its OWN authentication in the law, verifying an HMAC over the raw bytes
+      # before anything is parsed. Without this line a fresh service deploys private and every
+      # webhook gets 403 at the edge, never reaching that verification. It bit prod on its
+      # first CI deploy; making it explicit here means a redeploy can never silently re-close.
+      - '--allow-unauthenticated'
       # Secrets arrive from Secret Manager, never from this file, and their NAMES are
       # per-environment so staging can never read production's database.
       - '--update-secrets=DATABASE_URL=${_DATABASE_URL_SECRET}:latest,DISCORD_BOT_TOKEN=${_BOT_TOKEN_SECRET}:latest'
