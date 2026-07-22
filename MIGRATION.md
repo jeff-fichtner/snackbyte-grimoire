@@ -1,7 +1,7 @@
 # Migration — from `snackbyte-discord` to Grimoire
 
 Grimoire supersedes `~/snackbyte/code/snackbyte-discord` (private): a working, deployed,
-single-tenant Discord hub — 6 shipped specs, 4,331 lines of `src`, 2,737 lines across 29
+single-tenant Discord hub — 6 shipped specs, 4,319 lines of `src`, 2,737 lines across 29
 test files, live on Cloud Run as v0.6.2.
 
 **It is reference only, and it is load-bearing.** It keeps serving production until parity
@@ -41,10 +41,16 @@ single-tenant wiring by osmosis is — and Tier 3 never being opened is what pre
 
 ## The three tiers
 
-### Tier 1 — lifts nearly verbatim, with its tests attached (~1,400 lines)
+### Tier 1 — lifts nearly verbatim, with its tests attached (~1,100 lines)
 
-`src/bot/members/` (284) · `src/bot/moderation/` guards (418) · `src/routing/transforms/` ·
-the adapters' parse/normalize logic in `src/sources/`
+`src/bot/members/` (284) · `src/bot/moderation/standing.ts` + `guards.ts` (95) ·
+`src/routing/transforms/` · the adapters' parse/normalize logic in `src/sources/`
+
+Note the split inside `src/bot/moderation/` (418 lines total): **`standing.ts` (52) and
+`guards.ts` (43) are Tier 1** — they answer _does this speaker's authority cover this verb
+and this target?_, which is the Law's member-authority question and the only way agreement
+rule 3 (Standing) can be enforced. **`sanctions.ts` (191) and `channel.ts` (132) are the
+hex verbs**, and they are deferred rather than lifted — see below.
 
 Already tenant-safe by construction — context arrives as parameters. `src/bot/members/roles.ts`
 is the proof: 188 lines, zero imports, `RoleView`/`MemberView` interfaces instead of live
@@ -95,15 +101,32 @@ tenant-scoped secret store, identity/OAuth/install, the core↔binding split its
 rate-limit _fairness_ across tenants, and the spell model. This is the majority of the
 interesting work.
 
-## What does not come across at all
+## Deferred, but destined — not abandoned
 
-**Moderation is ~30% of the predecessor and is not on the cutover path.**
-`src/bot/commands/` (1,233) + `src/bot/moderation/` (418). Both parties in the predecessor's
-own review called it scaffolding — "does this beat right-clicking?" — and its payoff
-(infractions) was deferred twice. Leave it behind the cutover. Add it later, or never.
+**Grimoire is the predecessor done right, and its features are on the way here.** What we
+are pivoting away from is a set of _patterns_, not a set of features. Keep the two apart:
+refusing a pattern is permanent, deferring a feature is only sequencing.
 
-**Anything the predecessor's own roadmap already condemned.** Rebuilding these would be
-re-implementing work 007–013 was going to delete:
+**Moderation is ~36% of the predecessor and is not on the cutover path** —
+`src/bot/commands/` (1,233) + `sanctions.ts`/`channel.ts` (323). The predecessor's own
+review called this surface scaffolding ("does this beat right-clicking?") and deferred its
+payoff, infractions, twice.
+
+But it is not discarded, and it already has its place in this model: **these are the
+hexes.** Ban, kick, timeout, purge, lock, slowmode are the irreversible, high-blast-radius
+verbs the vocabulary names as engineer-authored — never composable, cast by a human with
+standing. They arrive when the hex half of the vocabulary is built. Nothing here is
+"never"; it is simply not what makes the cutover possible.
+
+The same holds for the whole shipped surface. Roles and nicknames are charms, moderation
+verbs are hexes, the inbound sources are trigger species, faces are nouns. **The parity bar
+is 001–006 as they _would have looked_ after the tenancy line landed** — which is
+materially less work than 001–006 as they exist.
+
+## What is actually refused — the patterns we are pivoting from
+
+These do not come across in any form, at any point. Rebuilding them would re-implement work
+the predecessor's own roadmap was going to delete:
 
 | Condemned                | Where it lives               | Why                                            |
 | ------------------------ | ---------------------------- | ---------------------------------------------- |
@@ -112,9 +135,37 @@ re-implementing work 007–013 was going to delete:
 | `DEMO_CHANNEL_WEBHOOK`   | config + delivery            | Replaced by per-tenant mint/list/adopt faces   |
 | deploy-time registration | `src/bot/deploy-commands.ts` | Tier 3; replaced by per-guild runtime service  |
 
+And the pattern beneath all of them, which is the whole reason for the reset: **tenant
+identity living in the process** — one token, one env, one client, one owner. Every Tier 3
+file is a symptom of it.
+
 The rule generalizes: **rebuild shipped behavior in its intended final form, not as
-shipped.** The parity bar is 001–006 as they _would have looked_ after the tenancy line
-landed, which is materially less work than 001–006 as they exist.
+shipped.** Extract the work until it is capitalized on; refuse the patterns it was built
+with.
+
+## The trajectory difference
+
+Grimoire re-walks the predecessor's spec series, but toward an end the predecessor was
+never pointed at. Its specs were **Discord-specific by construction** — a Discord hub that
+later discovered it wanted tenants. Grimoire is a platform for performative speech in which
+**Discord is the first binding**, and every spec is aimed there from the first row written.
+
+So the series is not invented from nothing, and it is not copied either: each of 001–006 is
+re-cut against the model, and the pieces land in different places than they did.
+
+| Predecessor           | Lands in Grimoire as                                             |
+| --------------------- | ---------------------------------------------------------------- |
+| inbound webhooks      | a **trigger species** (external call), mounted by the binding    |
+| routes + transforms   | **spells** — stored sentences — plus **logic forms**             |
+| delivery service      | **logistics**: media, guarantees, the one chokepoint             |
+| roles, nicknames      | **charms** in the verb vocabulary                                |
+| moderation, sanctions | **hexes** — engineer-authored, never composable                  |
+| the whitelist, faces  | **nouns** the tenant owns                                        |
+| _(never existed)_     | the **law** — authentication, tenant authority, member authority |
+
+That last row is the trajectory difference in one line: the predecessor had no law because
+it had exactly one owner, and everything it built assumed that. Here the law is present from
+001, so every later spec is written against it rather than retrofitted onto it.
 
 ## Cutover
 
@@ -122,14 +173,29 @@ Cut over **early on a thin spine, not late at full 006 parity** — parity is a 
 expands while you are not shipping. Both repos are never maintained at once; the old one
 freezes the moment the new one starts.
 
+**Freezing is not deleting, and there is no hurry to delete.** The predecessor can sit
+frozen and serving for as long as it is useful; archiving it is a housekeeping act with no
+deadline attached, and no work here is gated on it.
+
 1. **Transplant the infrastructure** — stage, not play. Outside the model; re-deriving it is
-   waste. _(Partially done: toolchain, lint, typecheck, vitest, `.nvmrc`, `check:all` are in.
-   Still to come from the predecessor: `Dockerfile`, `cloudbuild.yaml`,
-   `.github/workflows/ci-cd.yml`, and `scripts/` — deploy, set-secrets, derive-version + its
-   test, migrate, build, dev, load-env.)_
+   waste. _(Done: toolchain, lint, typecheck, vitest, `.nvmrc`, `check:all`, and the release
+   flow — which is **not** transplanted but consumed as
+   `snackbyte-release-flow-action@v1`, the extracted form of the predecessor's
+   `derive-version.sh`. Do not copy that script back in; that would regress to its
+   pre-extraction ancestor.)_
+
+   **The rest of this step lands inside 001, not before it.** `Dockerfile`,
+   `cloudbuild.yaml`, the deploy job, `migrate`, `build`, `dev`, and `load-env` all need a
+   server entrypoint and a database to be meaningful — and a config that cannot be run is a
+   trap, not a head start. "It builds, deploys, and serves" is a spec outcome; it belongs
+   where it can be tested.
+
 2. **Fresh Supabase project** — grants the separate-prod-DB wish, and is the natural moment
    to rotate the credentials that passed through setup sessions.
 3. **Spec 001's spine green on a _new_ Cloud Run service** — never the predecessor's.
+   Sharing a service would couple the two deployments and make steps 4 and 5 impossible:
+   moving one webhook at a time, and rolling back, both require the old service to keep
+   serving untouched while the new one takes traffic.
 4. **Cut inbound over per source** — a webhook is a URL, so ClickUp moves, gets watched, then
    GitHub. Each is independently reversible.
 5. **Flip the gateway last.** This is the one irreversible moment: two processes on one bot
