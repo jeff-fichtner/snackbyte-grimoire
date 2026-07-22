@@ -1,15 +1,58 @@
 # Build the image and deploy it to Cloud Run.
 #
-# The target is `grimoire` — a NEW service, never the predecessor's `snackbyte-discord`.
-# Sharing one service would couple the two deployments and make the migration's per-source
-# cutover and its rollback impossible: the old service must keep serving untouched while
-# the new one takes traffic one webhook at a time.
+# The target is a NEW service, never the predecessor's `snackbyte-discord`. Sharing one
+# service would couple the two deployments and make the migration's per-source cutover and
+# its rollback impossible: the old service must keep serving untouched while the new one
+# takes traffic one webhook at a time.
+#
+# EVERY environment-varying value is a REQUIRED substitution with no default. That is
+# deliberate and it is the whole point of this file's shape.
+#
+# `_SERVICE: grimoire` used to be a default here, and the two secrets were hardcoded to
+# `grimoire-database-url` / `grimoire-discord-bot-token` — names that read like production
+# but held STAGING values. A deploy invoked without substitutions would therefore have
+# created a production service silently wired to the staging database, and nothing anywhere
+# would have reported a problem. The failure would have surfaced later, somewhere unrelated,
+# as inexplicably wrong data.
+#
+# With no defaults, an incomplete invocation fails immediately with a message naming the
+# missing substitution. `release.yml` supplies all of them from the branch. Adding an
+# environment means adding a mapping there, never editing this file.
 
 substitutions:
-  _SERVICE: grimoire
-  _REGION: us-central1
+  _SERVICE: '' # e.g. grimoire (main/production) or grimoire-staging (dev/staging)
+  _REGION: ''
+  _DATABASE_URL_SECRET: ''
+  _BOT_TOKEN_SECRET: ''
+
+# Refuse to run rather than guess. Cloud Build does not enforce required substitutions, so
+# the check is explicit and it is the first thing that happens.
+options:
+  logging: CLOUD_LOGGING_ONLY
+  substitution_option: ALLOW_LOOSE
 
 steps:
+  - id: require-substitutions
+    name: gcr.io/cloud-builders/gcloud
+    entrypoint: bash
+    args:
+      - -c
+      - |
+        missing=""
+        [ -z "${_SERVICE}" ]             && missing="$$missing _SERVICE"
+        [ -z "${_REGION}" ]              && missing="$$missing _REGION"
+        [ -z "${_DATABASE_URL_SECRET}" ] && missing="$$missing _DATABASE_URL_SECRET"
+        [ -z "${_BOT_TOKEN_SECRET}" ]    && missing="$$missing _BOT_TOKEN_SECRET"
+        if [ -n "$$missing" ]; then
+          echo "REFUSING TO DEPLOY. Missing required substitutions:$$missing" >&2
+          echo "A default for any of these could deploy the wrong code, or the right code" >&2
+          echo "wired to the wrong environment's data. Pass them explicitly." >&2
+          exit 1
+        fi
+        echo "deploying '${_SERVICE}' to '${_REGION}'"
+        echo "  database secret: ${_DATABASE_URL_SECRET}"
+        echo "  bot token secret: ${_BOT_TOKEN_SECRET}"
+
   - id: build
     name: gcr.io/cloud-builders/docker
     args:
@@ -36,12 +79,10 @@ steps:
       - '--platform=managed'
       # Always-on: the service holds connections and must not cold-start on every event.
       - '--min-instances=1'
-      # Secrets arrive from Secret Manager, never from this file.
-      - '--update-secrets=DATABASE_URL=grimoire-database-url:latest,DISCORD_BOT_TOKEN=grimoire-discord-bot-token:latest'
+      # Secrets arrive from Secret Manager, never from this file, and their NAMES are
+      # per-environment so staging can never read production's database.
+      - '--update-secrets=DATABASE_URL=${_DATABASE_URL_SECRET}:latest,DISCORD_BOT_TOKEN=${_BOT_TOKEN_SECRET}:latest'
       - '--set-env-vars=LOG_LEVEL=info'
 
 images:
   - '${_REGION}-docker.pkg.dev/$PROJECT_ID/grimoire/${_SERVICE}:$TAG_NAME'
-
-options:
-  logging: CLOUD_LOGGING_ONLY
