@@ -29,6 +29,7 @@ const tenants = [
     key: 'alpha',
     name: 'Alpha Guild',
     secret: process.env.SEED_SECRET_A ?? 'dev-secret-alpha',
+    clickupSecret: process.env.SEED_CLICKUP_SECRET_A ?? 'dev-clickup-alpha',
     guild: process.env.DISCORD_GUILD_A ?? 'guild-alpha',
     channel: process.env.DISCORD_CHANNEL_A ?? 'channel-alpha',
   },
@@ -36,6 +37,7 @@ const tenants = [
     key: 'beta',
     name: 'Beta Guild',
     secret: process.env.SEED_SECRET_B ?? 'dev-secret-beta',
+    clickupSecret: process.env.SEED_CLICKUP_SECRET_B ?? 'dev-clickup-beta',
     guild: process.env.DISCORD_GUILD_B ?? 'guild-beta',
     channel: process.env.DISCORD_CHANNEL_B ?? 'channel-beta',
   },
@@ -72,6 +74,7 @@ try {
   for (const t of tenants) {
     const tenantId = randomUUID();
     const registrationId = randomUUID();
+    const clickupRegistrationId = randomUUID();
     const destinationId = randomUUID();
     const installId = randomUUID();
 
@@ -94,6 +97,18 @@ try {
       'github.signing',
       t.secret,
     ]);
+    // A SECOND source, seeded the same way as the first. If adding one ever needs more than a
+    // registration, a secret and a spell, the registry's promise has quietly stopped holding.
+    await client.query(
+      `INSERT INTO source_registrations (id, tenant_id, source, secret_ref)
+       VALUES ($1,$2,'clickup','clickup.signing')`,
+      [clickupRegistrationId, tenantId],
+    );
+    await client.query('INSERT INTO secrets (tenant_id, ref, value) VALUES ($1, $2, $3)', [
+      tenantId,
+      'clickup.signing',
+      t.clickupSecret,
+    ]);
     await client.query(
       `INSERT INTO spells (id, tenant_id, name, trigger_species, source, event_type, condition, verb, verb_config)
        VALUES ($1,$2,$3,'external_call','github','release',$4,'post_message',$5)`,
@@ -106,6 +121,20 @@ try {
         JSON.stringify({
           destinationId,
           transform: { template: '{repository} released **{tag}** — {url}' },
+        }),
+      ],
+    );
+    // The predecessor's clickup route, translated: no condition, every status change relays.
+    await client.query(
+      `INSERT INTO spells (id, tenant_id, name, trigger_species, source, event_type, condition, verb, verb_config)
+       VALUES ($1,$2,$3,'external_call','clickup','taskStatusUpdated',NULL,'post_message',$4)`,
+      [
+        randomUUID(),
+        tenantId,
+        'Relay the task status',
+        JSON.stringify({
+          destinationId,
+          transform: { template: '{user}: {status_before} → **{status}** — {url}' },
         }),
       ],
     );

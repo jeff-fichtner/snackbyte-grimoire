@@ -13,6 +13,7 @@ import { createServer } from './server.js';
 // Registering the vocabulary is a side effect of import, which is what keeps core free of
 // a switch statement enumerating them.
 import './core/language/verbs/post-message.js';
+import './sources/clickup/adapter.js';
 import './sources/github/adapter.js';
 
 const log = childLog('main');
