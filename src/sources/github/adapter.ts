@@ -41,6 +41,7 @@ export const github: SourceAdapter = {
     const repository = payload.repository as Record<string, unknown> | undefined;
     const release = payload.release as Record<string, unknown> | undefined;
     const sender = payload.sender as Record<string, unknown> | undefined;
+    const headCommit = payload.head_commit as Record<string, unknown> | undefined;
 
     const facts: Record<string, string> = {};
     const put = (key: string, value: string | undefined): void => {
@@ -53,6 +54,23 @@ export const github: SourceAdapter = {
     put('tag', str(release?.tag_name));
     put('release_name', str(release?.name));
     put('url', str(release?.html_url));
+
+    // Push facts. Without these a push carries only `repository` and `sender` — every other
+    // fact belongs to a release — so a spell written against a push renders a template full
+    // of blanks. That is the predecessor's actual behaviour (its one github route was
+    // `push`), so it is parity, not a new feature.
+    const ref = str(payload.ref);
+    put('ref', ref);
+    // The branch alone is what a message wants to say; `refs/heads/` is plumbing.
+    if (ref?.startsWith('refs/heads/')) put('branch', ref.slice('refs/heads/'.length));
+    put('compare', str(payload.compare));
+    // First line only. A commit body can run to hundreds of lines, and the transform is a
+    // substitution with no way to truncate — an unbounded fact here becomes an unbounded
+    // message, which the destination then rejects.
+    const message = str(headCommit?.message);
+    if (message !== undefined) put('commit_message', message.split('\n', 1)[0] ?? '');
+    put('commit_url', str(headCommit?.url));
+    if (Array.isArray(payload.commits)) put('commit_count', String(payload.commits.length));
 
     return { source: 'github', eventType, dedupeKey: delivery, facts };
   },

@@ -124,6 +124,31 @@ try {
         }),
       ],
     );
+    // The predecessor's ONE github route was `push`, not `release` — the release spell above
+    // is demonstration data. This is the parity spell.
+    await client.query(
+      `INSERT INTO spells (id, tenant_id, name, trigger_species, source, event_type, condition, verb, verb_config)
+       VALUES ($1,$2,$3,'external_call','github','push',$4,'post_message',$5)`,
+      [
+        randomUUID(),
+        tenantId,
+        'Relay the push',
+        // The predecessor had no condition here. This one deviates deliberately: a TAG push
+        // is also a `push` event and carries no branch, so without this it would render
+        // "pushed to **** " with a hole in it. Same class of defect as the clickup creation
+        // event — an event the spell was not written for, rendered as though it was.
+        JSON.stringify({
+          op: 'not',
+          of: { op: 'equals', fact: 'branch', value: '' },
+        }),
+        JSON.stringify({
+          destinationId,
+          transform: {
+            template: '{sender} pushed to **{branch}** — {commit_message}\n{compare}',
+          },
+        }),
+      ],
+    );
     // The predecessor's clickup route, translated.
     await client.query(
       `INSERT INTO spells (id, tenant_id, name, trigger_species, source, event_type, condition, verb, verb_config)
