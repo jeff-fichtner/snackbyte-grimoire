@@ -193,9 +193,19 @@ deadline attached, and no work here is gated on it.
 2. **Fresh Supabase project** — grants the separate-prod-DB wish, and is the natural moment
    to rotate the credentials that passed through setup sessions.
 3. **Spec 001's spine green on a _new_ Cloud Run service** — never the predecessor's.
+   _(Done, 2026-07-22.)_ `grimoire-staging` on Cloud Run us-central1, against a
+   `grimoire-staging` Supabase project, speaking as the `grimoire-dev` Discord application.
+   The `.dev` domain is the dev tier and `.io` production, so the naming runs
+   `grimoire-staging` everywhere rather than the bare production name.
+
+   **The predecessor's staging tier is fully unwound**: its Supabase project, its Cloud Run
+   service, and its `discord.snackbyte.dev` record are all gone. Its production tier —
+   `snackbyte-discord` and the `discord` Supabase project — is untouched and still
+   load-bearing, which is the whole point of taking staging first.
    Sharing a service would couple the two deployments and make steps 4 and 5 impossible:
    moving one webhook at a time, and rolling back, both require the old service to keep
    serving untouched while the new one takes traffic.
+
 4. **Cut inbound over per source** — a webhook is a URL, so ClickUp moves, gets watched, then
    GitHub. Each is independently reversible.
 5. **Flip the gateway last.** This is the one irreversible moment: two processes on one bot
