@@ -15,3 +15,6 @@ specs/**/*.html
 
 # Extension local config — real space/list names, never the shipped placeholders
 .specify/extensions/*/config.local.yml
+
+# Local development database (npm run db:up)
+.pgdata/
