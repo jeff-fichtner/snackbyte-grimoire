@@ -91,8 +91,8 @@ not happen.
 separates it from a simple relay. It is P2 only because the first two stories must exist
 for there to be anything to record.
 
-**Independent Test**: Drive one event of each kind — delivered, duplicate, refused, and
-undeliverable — and confirm the record shows each accurately.
+**Independent Test**: Drive one event of each kind — delivered, duplicate, declined by
+condition, refused, and undeliverable — and confirm the record shows each accurately.
 
 **Acceptance Scenarios**:
 
@@ -119,7 +119,8 @@ undeliverable — and confirm the record shows each accurately.
   fails cleanly and is recorded as failed; nothing is reported delivered.
 - **The platform's store is unreachable.** Ownership cannot be established, so nothing is
   acted on, and the source is answered in a way that invites it to resend rather than to
-  treat the event as consumed.
+  treat the event as consumed. The platform still reports itself alive — it is running and
+  will serve again the moment the store returns — while reporting itself not ready.
 - **A malformed or oversized payload arrives.** It is refused without being parsed into
   anything the rest of the system acts on.
 - **The same event arrives twice concurrently.** Exactly one message results.
@@ -131,7 +132,8 @@ undeliverable — and confirm the record shows each accurately.
 **Arrival and admission**
 
 - **FR-001**: The platform MUST accept events from an outside source at an address that
-  identifies which community the event is for.
+  identifies which community the event is for, and MUST answer the source promptly enough
+  that it does not consider the delivery failed and resend.
 - **FR-002**: The platform MUST verify an event's authenticity against a credential
   belonging to the addressed community, using the exact bytes received, before that event is
   parsed, matched, or acted on in any way.
@@ -153,7 +155,8 @@ undeliverable — and confirm the record shows each accurately.
 - **FR-008**: It MUST be impossible for a request to cause the platform to act as any
   community other than the one whose credential it proved.
 - **FR-009**: Two communities MUST be able to use the same outside source independently,
-  with separate credentials and separate spells, without collision.
+  with separate credentials and separate spells. Neither community's registration may
+  displace the other's, and neither may be visible to the other.
 
 **The spell**
 
@@ -182,29 +185,30 @@ undeliverable — and confirm the record shows each accurately.
   delivered anything that was not.
 - **FR-018**: Credentials MUST be stored and used by reference; their values MUST NOT appear
   in browsable data, in logs, or in any response.
+- **FR-019**: Communities share the platform's capacity to speak to a destination. One
+  community's burst MUST NOT prevent another's messages from being delivered; the single
+  delivery point MUST arbitrate that shared capacity fairly.
 
 **Serving**
 
-- **FR-019**: The platform MUST report itself alive independently of whether the destination
+- **FR-020**: The platform MUST report itself alive independently of whether the destination
   platform or its own store is reachable, and MUST report readiness separately.
-- **FR-020**: The platform MUST be deployable from a clean checkout by an automated process,
+- **FR-021**: The platform MUST be deployable from a clean checkout by an automated process,
   and MUST run as a service the outside source can reach.
-- **FR-021**: The platform MUST NOT depend on any single community's configuration in order
+- **FR-022**: The platform MUST NOT depend on any single community's configuration in order
   to start, or in order to serve other communities.
 
 **Extensibility**
 
-- **FR-022**: Adding a second kind of event source, a second destination platform, or a
+- **FR-023**: Adding a second kind of event source, a second destination platform, or a
   second way of starting a spell MUST NOT require changing the parts of the system that
   match spells, enforce ownership, or deliver messages.
-- **FR-023**: No part of the system outside the destination-specific layer may be written in
+- **FR-024**: No part of the system outside the destination-specific layer may be written in
   terms of a particular chat platform.
 
 ### Key Entities
 
 - **Community** — an independent owner of a book. Everything else belongs to exactly one.
-- **Binding** — a community's connection to a chat platform, and the fact that establishes
-  the platform may act there.
 - **Spell** — a stored sentence owned by a community: what starts it, an optional condition,
   what it says, and where it says it.
 - **Source registration** — a community's relationship with one outside event source,
@@ -227,8 +231,8 @@ undeliverable — and confirm the record shows each accurately.
   community exists.
 - **SC-004**: An event resent by the outside source any number of times produces exactly one
   message.
-- **SC-005**: With the destination made to fail, 100% of affected invocations end recorded
-  as failed and 0% recorded as delivered.
+- **SC-005**: With the destination made to fail, once retries are exhausted 100% of affected
+  invocations are recorded as failed and 0% are recorded as delivered.
 - **SC-006**: With the destination unavailable and later restored, the platform recovers
   without a restart and without operator intervention.
 - **SC-007**: A reviewer reading the record can determine, for every event in a session,
