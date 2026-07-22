@@ -4,7 +4,7 @@ platform is a **language** (what can be said), a **law** (who may say it), and a
 **logistics** (how it happens). Every feature is one **invocation** walking
 trigger → law → spell → logic → verbs → nouns → logistics. Read `GRIMOIRE.md` before
 designing anything — it is the design element everything answers to, including the
-lexicon (spells, charms/hexes, glamours, circles, familiars) and the agreement rules.
+lexicon (spells, charms/hexes, faces, circles, familiars) and the agreement rules.
 
 **Discord is the first binding, not the identity.** Core code never names a platform;
 bindings own their SDKs and mount trigger species, media, and law hooks onto the model.

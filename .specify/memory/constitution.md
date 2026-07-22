@@ -23,7 +23,7 @@ conform to both.
 
 The platform's reason for existing is cheap extension — for its engineers and for its
 tenants. Adding the next verb, trigger species, or binding must be near-zero effort for an
-engineer; adding the next spell, glamour, or rule must be near-zero effort for a tenant
+engineer; adding the next spell, face, or rule must be near-zero effort for a tenant
 who cannot ship code and never will.
 
 ## The Model
