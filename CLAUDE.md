@@ -11,9 +11,13 @@ bindings own their SDKs and mount trigger species, media, and law hooks onto the
 Further bindings (Slack among them) are intended if wanted.
 
 **Greenfield discipline:** the predecessor repo (`~/snackbyte/code/snackbyte-discord`,
-private, deprecated at parity cutover) is REFERENCE ONLY — one large proof of concept.
-Consult it for lessons and behavior; never copy code from it wholesale. It keeps serving
-the live service until this repo's CI reaches deploy parity on the same Cloud Run service.
+private, deprecated at parity cutover) is REFERENCE ONLY — one large proof of concept. It
+keeps serving the live service until Grimoire cuts over onto a **new** Cloud Run service;
+never edit it — any commit to its main triggers a deploy. **Read `MIGRATION.md` before
+opening any file of it.** It defines the argument-vs-ambient test, the three tiers (lifts
+with its tests / reshape / never open), what is deliberately left behind, and the cutover
+sequence. Greenfield means no file survives unexamined and all wiring is new — not that
+tested pure functions get retyped.
 
 Spec-driven development via GitHub Spec Kit: principles live in
 `.specify/memory/constitution.md`; specs go on `spec/NNN-*` branches, never on main until
