@@ -1,7 +1,7 @@
 # Grimoire
 
 **Spells for your community.** Grimoire is a platform where chat communities own
-*spells* — stored sentences that do things when spoken: post as a persona, grant a role,
+_spells_ — stored sentences that do things when spoken: post as a persona, grant a role,
 welcome a member, relay an event from the outside world. Spells are composed without code,
 cast with verified authority, and delivered with guarantees.
 
