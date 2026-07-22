@@ -146,7 +146,16 @@ tuning against traffic that does not exist yet, and has no queue to grow unbound
 
 **Decision.** A `secrets` table holding reference name → value, with values encrypted at rest
 by the database, read through `resolveSecret(tenantRef, ref)`. Platform configuration
-(`DATABASE_URL`, `PORT`, the bot token) stays in environment variables.
+(`DATABASE_URL`, `PORT`, `LOG_LEVEL`) stays in environment variables.
+
+The bot token is the one value that is platform configuration **and** must not be reached as a
+constant. Its bytes live in the environment (`DISCORD_BOT_TOKEN`) — legitimate, since no second
+tenant needs a different value — but nothing reads that variable directly. It is named by
+`applications.token_ref` and reached only through `getRest(applicationId)`. The Technology
+Constraint at issue is about the *seam*, not the storage: identity must be a lookup so that a
+second application, or one connection of a sharded pool, is a row rather than a change to every
+call site. Storage may move later without touching a caller; the lookup cannot be added later
+without touching all of them.
 
 **Rationale.** Principle VII requires tenant-scoped secrets to come from a store that is
 writable at runtime, because a tenant adding an integration must not require a deploy — and on

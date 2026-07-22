@@ -83,16 +83,18 @@ it wants to act as.
 
 ### User Story 3 - The record is trustworthy (Priority: P2)
 
-The owner opens the record and sees what actually happened: what was delivered, what was
-correctly skipped, what was refused, and what failed. Nothing is reported as done that did
-not happen.
+Every invocation leaves a durable, accurate record of what actually happened: what was
+delivered, what was correctly skipped, what was declined, what was refused, and what failed.
+Nothing is ever recorded as done that did not happen. The record is complete and truthful
+enough to be shown to an owner — the surface that shows it is a later feature.
 
 **Why this priority**: The honest record is the platform's central promise and what
 separates it from a simple relay. It is P2 only because the first two stories must exist
 for there to be anything to record.
 
 **Independent Test**: Drive one event of each kind — delivered, duplicate, declined by
-condition, refused, and undeliverable — and confirm the record shows each accurately.
+condition, refused, and undeliverable — and confirm the recorded outcome matches reality in
+every case.
 
 **Acceptance Scenarios**:
 
@@ -205,10 +207,18 @@ condition, refused, and undeliverable — and confirm the record shows each accu
   match spells, enforce ownership, or deliver messages.
 - **FR-024**: No part of the system outside the destination-specific layer may be written in
   terms of a particular chat platform.
+- **FR-025**: The identity the platform speaks as on a destination platform MUST be stored and
+  resolved as data, never fixed when the service starts. Adding a second such identity — one
+  belonging to a community rather than the platform, or one of several sharing the load — MUST
+  be achievable by adding data, without changing how any spell is matched, delivered, or
+  recorded.
 
 ### Key Entities
 
 - **Community** — an independent owner of a book. Everything else belongs to exactly one.
+- **Platform identity** — who the platform speaks as on a destination platform, and the
+  reference to the credential it speaks with. Belongs to the platform rather than to any
+  community, and is looked up rather than assumed, so that a second one is only ever more data.
 - **Install** — the recorded fact that the platform may act in one particular community. Set
   up by hand in this feature; the flow that establishes it is a later feature.
 - **Spell** — a stored sentence owned by a community: what starts it, an optional condition,

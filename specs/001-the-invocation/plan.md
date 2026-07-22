@@ -112,6 +112,7 @@ src/
 │   ├── spells/                # matching stored sentences to an event
 │   └── invocation.ts          # the walk, in order
 ├── bindings/
+│   ├── registry.ts            # getRest(applicationId) — identity is a lookup, never a constant
 │   └── discord/               # the ONLY place discord.js is imported
 ├── sources/                   # external-call adapters (parse + normalize)
 ├── db/                        # repository interface + Postgres implementation
@@ -147,6 +148,23 @@ _Re-evaluated after Phase 1. Same eight principles, now against concrete design.
 | **VI. Always-on resilience**   | Split `/health/live` and `/health/ready`; liveness forbidden from consulting downstreams                                  | PASS    |
 | **VII. Secrets by reference**  | `secrets` table keyed `(tenant_id, ref)`; only `resolveSecret` reads it; no surface selects `value`                       | PASS    |
 | **VIII. Isolation by default** | Branded `TenantRef` with no public constructor; every `Repository` method takes it; composite uniqueness includes tenant  | PASS    |
+
+The **Technology & Platform Constraints** are fixed by the constitution as well, and Governance
+requires an amendment to deviate from them — so they are gated explicitly rather than assumed.
+Checking only the eight numbered principles is how a deviation reaches implementation unnoticed:
+the constraints are a separate section, and cross-artifact analysis cannot catch a gap that spec,
+plan, and tasks all share.
+
+| Constraint                                 | How this design satisfies it                                                                       | Verdict |
+| ------------------------------------------ | ---------------------------------------------------------------------------------------------------- | ------- |
+| TypeScript ESM strict, pinned Node major   | Pinned in `package.json`/`.nvmrc`; `check:all` enforces                                            | PASS    |
+| One combined always-on service             | One Cloud Run service; HTTP surface and delivery in one process                                    | PASS    |
+| Bindings own their SDK; core imports none  | `src/bindings/discord/` is the sole importer, enforced by the lint rule in T008                    | PASS    |
+| **Application identity is data**           | `applications` row resolved through `getRest(applicationId)`; no caller reads a token constant (FR-025) | PASS    |
+| Session / multi-connection logistics unbuilt | REST only, no gateway — and the resolver above is the seam they would arrive behind               | PASS    |
+| Postgres behind a thin repository          | `db/` interface + Postgres implementation; forward-only numbered migrations                        | PASS    |
+| Runtime-writable secret store              | `secrets` table written at runtime; no deploy required to add one                                  | PASS    |
+| Structured logging under VII's redaction   | `pino` with a redaction serializer (T016), asserted by a test that passes a credential through (T049) | PASS    |
 
 **Still no violations.** Two design decisions are worth flagging as deliberate debts rather
 than gaps, both recorded where they will be picked up:

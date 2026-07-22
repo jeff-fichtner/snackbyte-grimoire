@@ -25,6 +25,46 @@ The isolation boundary. Everything else belongs to exactly one.
 | `name`       | `text`        | human label, not an identifier |
 | `created_at` | `timestamptz` |                                |
 
+### `applications` — platform-owned, not tenant-scoped
+
+The platform's identity on one binding: the credential a verb ultimately speaks through. Exactly
+one row in this feature.
+
+It is a row rather than a constant so that identity is always a **lookup** —
+`getRest(applicationId)` — and never `env.DISCORD_BOT_TOKEN` read once at boot. That is the seam
+the constitution's Technology Constraints require, and it is what keeps a second application (a
+tenant's own, or one connection of a sharded pool) a data change rather than a signature change
+at every call site. The predecessor deferred exactly this and then priced the resulting refactor
+as the single most expensive item in its tenancy work.
+
+| Column      | Type            | Notes                                                     |
+| ----------- | --------------- | --------------------------------------------------------- |
+| `id`        | `uuid` PK       | every consumer resolves its client by this                |
+| `binding`   | `text` NOT NULL | which platform, e.g. `discord`                            |
+| `tenant_id` | `uuid` NULL     | → `tenants`. **NULL = the platform's shared application** |
+| `token_ref` | `text` NOT NULL | a name, never a value                                     |
+| `enabled`   | `boolean`       | default true                                              |
+|             |                 | **UNIQUE** `(binding, tenant_id)` + partial index, below   |
+
+**The composite uniqueness is not sufficient on its own, and this is easy to miss.** Postgres
+treats NULLs as *distinct* in a `UNIQUE` constraint, so `('discord', NULL)` can be inserted more
+than once — two platform applications for one binding, with `getRest` then picking arbitrarily
+between them. The migration must therefore add a partial unique index alongside it:
+
+```sql
+CREATE UNIQUE INDEX applications_one_platform_per_binding
+  ON applications (binding) WHERE tenant_id IS NULL;
+```
+
+The composite constraint keeps one application per tenant per binding; the partial index keeps
+exactly one platform-owned application per binding. Both are required.
+
+`tenant_id` is nullable here and `NOT NULL` everywhere else. That is deliberate, not an
+inconsistency: this is the one platform-layer table, and the constitution forbids giving platform
+infrastructure a tenant reference merely to look symmetrical. While it is NULL the `token_ref`
+resolves through the platform config path; a tenant-owned application would resolve through the
+tenant secret store. **The call site is identical either way** — which is the entire point.
+
 ### `installs`
 
 The verified fact that the platform may act in one community on one binding. Created by hand
@@ -143,6 +183,8 @@ than render as a mystery.
 ## Relationships
 
 ```text
+applications                                  (platform layer — tenant_id NULL)
+
 tenants ─┬─< installs ──< destinations
          ├─< source_registrations
          ├─< spells ──────────────────┐
@@ -160,10 +202,11 @@ tenants ─┬─< installs ──< destinations
 | `(spell_id, dedupe_key)` is unique — the database enforces exactly-once  | FR-015           |
 | `outcome` is constrained to the six values above                        | FR-017           |
 | A disabled tenant, install, registration, or spell is inert, not deleted | FR-021 (isolation)|
+| The binding's client is resolved by application id, never from a constant | FR-025           |
 
 ## What is deliberately absent
 
-No `applications` table, no per-tenant bot identity, no gateway state, no faces, no
-composer-authored spells, no infractions or counters. Each belongs to a later spec, and each
-would be a column or a table then — not a reshaping of what is above, because ownership is
-already present on every row.
+No per-tenant bot identity (the `applications` row exists, but its `tenant_id` stays NULL), no
+gateway state, no faces, no composer-authored spells, no infractions or counters. Each belongs to
+a later spec, and each would be a column or a table then — not a reshaping of what is above,
+because ownership is already present on every row and identity is already a lookup.
