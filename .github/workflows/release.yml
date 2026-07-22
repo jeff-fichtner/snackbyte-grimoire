@@ -78,11 +78,13 @@ jobs:
               echo "service=grimoire"                               >> "$GITHUB_OUTPUT"
               echo "db_secret=grimoire-prod-database-url"           >> "$GITHUB_OUTPUT"
               echo "bot_secret=grimoire-prod-discord-bot-token"     >> "$GITHUB_OUTPUT"
+              echo "runtime_sa=grimoire-prod-runtime@snackbyte-apps.iam.gserviceaccount.com"    >> "$GITHUB_OUTPUT"
               ;;
             dev)
               echo "service=grimoire-staging"                       >> "$GITHUB_OUTPUT"
               echo "db_secret=grimoire-staging-database-url"        >> "$GITHUB_OUTPUT"
               echo "bot_secret=grimoire-staging-discord-bot-token"  >> "$GITHUB_OUTPUT"
+              echo "runtime_sa=grimoire-staging-runtime@snackbyte-apps.iam.gserviceaccount.com" >> "$GITHUB_OUTPUT"
               ;;
             *)
               echo "::error::Branch '${{ github.ref_name }}' has no environment mapping."
@@ -100,4 +102,5 @@ jobs:
           _SERVICE=${{ steps.env.outputs.service }},\
           _REGION=us-central1,\
           _DATABASE_URL_SECRET=${{ steps.env.outputs.db_secret }},\
-          _BOT_TOKEN_SECRET=${{ steps.env.outputs.bot_secret }}
+          _BOT_TOKEN_SECRET=${{ steps.env.outputs.bot_secret }},\
+          _RUNTIME_SA=${{ steps.env.outputs.runtime_sa }}
