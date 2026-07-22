@@ -1,0 +1,47 @@
+<!doctype html>
+<!--
+  Grimoire app icon — the single source for grimoire-app-icon.png.
+  Standalone and dependency-free so it renders identically anywhere.
+
+  Regenerate:
+    "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome" \
+      --headless --disable-gpu --window-size=512,512 \
+      --screenshot=design/grimoire-app-icon.png \
+      --default-background-color=00000000 design/icon-512.html
+
+  The mark is the wordmark's sigil: a gold ring around a rotated square with a
+  cut-out centre. It reads at 64px, which is the size that actually matters.
+-->
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <style>
+      * { box-sizing: border-box; margin: 0; padding: 0; }
+      html, body { width: 512px; height: 512px; overflow: hidden; }
+      .icon {
+        width: 512px; height: 512px; position: relative; overflow: hidden;
+        background: radial-gradient(120% 120% at 50% 32%, #211c14 0%, #12100c 70%, #0b0a08 100%);
+      }
+      .icon > * { position: absolute; top: 50%; left: 50%; }
+      .halo   { transform: translate(-50%,-50%); width: 388px; height: 388px;
+                border: 2px solid rgba(205,163,73,0.14); border-radius: 50%; }
+      .ring   { transform: translate(-50%,-50%); width: 312px; height: 312px;
+                border: 6px solid #cda349; border-radius: 50%;
+                box-shadow: 0 0 60px -10px rgba(205,163,73,0.4),
+                            inset 0 0 40px -18px rgba(205,163,73,0.5); }
+      .sigil  { transform: translate(-50%,-50%) rotate(45deg); width: 150px; height: 150px;
+                background: linear-gradient(135deg, #e4c374 0%, #cda349 48%, #a67c2e 100%);
+                border-radius: 22px; box-shadow: 0 8px 30px -6px rgba(0,0,0,0.6); }
+      .cutout { transform: translate(-50%,-50%) rotate(45deg); width: 70px; height: 70px;
+                border: 5px solid rgba(26,23,18,0.9); border-radius: 12px; }
+    </style>
+  </head>
+  <body>
+    <div class="icon">
+      <div class="halo"></div>
+      <div class="ring"></div>
+      <div class="sigil"></div>
+      <div class="cutout"></div>
+    </div>
+  </body>
+</html>
