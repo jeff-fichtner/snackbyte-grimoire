@@ -17,6 +17,9 @@ import { type TenantRef, tenantFromVerifiedCall } from './tenant-ref.js';
 
 /** A decoy of realistic length, so the rejected path does the same work as the real one. */
 const DECOY_SECRET = 'x'.repeat(40);
+/** A well-formed id that owns nothing, so the decoy lookup costs what a real one costs. */
+const DECOY_ID = '00000000-0000-0000-0000-000000000000';
+const DECOY_REF = 'decoy.signing';
 
 export type Admission =
   | { admitted: true; tenant: TenantRef; source: string }
@@ -54,21 +57,37 @@ export async function authenticate(
 
   const presented = headers[adapter.signatureHeader] ?? '';
 
-  let secret: string | null = null;
-  if (registration) {
-    try {
-      secret = await repo.resolveSecret(
-        tenantFromVerifiedCall({
+  // Look the secret up on BOTH paths, including the unknown one.
+  //
+  // This looks wasteful and is not. Skipping the lookup when the registration is unknown
+  // costs one fewer database round trip, and over a network that is a plainly measurable
+  // difference — an attacker times two requests and learns which install identifiers exist.
+  // It is invisible against a local database and obvious against a hosted one, which is
+  // exactly why it survived until the suite ran against real infrastructure.
+  //
+  // The decoy tenant is never returned and its result is discarded; the point is that the
+  // work happens either way.
+  const lookupTenant = tenantFromVerifiedCall(
+    registration
+      ? {
           registrationId: registration.id,
           tenantId: registration.tenantId,
           source: registration.source,
           signatureVerified: true,
-        }),
-        registration.secretRef,
-      );
-    } catch {
-      return { admitted: false, reason: 'unavailable' };
-    }
+        }
+      : {
+          registrationId: DECOY_ID,
+          tenantId: DECOY_ID,
+          source: 'github',
+          signatureVerified: true,
+        },
+  );
+
+  let secret: string | null;
+  try {
+    secret = await repo.resolveSecret(lookupTenant, registration?.secretRef ?? DECOY_REF);
+  } catch {
+    return { admitted: false, reason: 'unavailable' };
   }
 
   // The decisive line: compute an HMAC either way. When the registration is unknown (or its
