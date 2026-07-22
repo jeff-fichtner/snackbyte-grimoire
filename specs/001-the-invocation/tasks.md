@@ -36,14 +36,14 @@ construction: the crossings, the enumeration probe, the timing assertion.
 
 **Purpose**: Runtime dependencies and the deploy path. Nothing here is product logic.
 
-- [ ] T001 Add runtime dependencies (`express`, `pg`, `pino`) and dev deps (`supertest`, `@types/express`, `@types/pg`) to `package.json`
-- [ ] T002 [P] Add `tsconfig.build.json` emitting `dist/server` from `src/`, excluding `src/web/**` and `tests/**`
-- [ ] T003 [P] Add `.env.example` documenting platform config only — `DATABASE_URL`, `PORT`, `LOG_LEVEL`, `DISCORD_BOT_TOKEN` — with a comment stating that anything a second tenant would need differently belongs in the store, not here, and that `DISCORD_BOT_TOKEN` is read **only** by the resolver behind `applications.token_ref`, never directly by a caller
-- [ ] T004 [P] Add `scripts/migrate.mjs` — forward-only runner applying `migrations/*.sql` in order, recording applied names in a `schema_migrations` table, registered as `npm run migrate` in `package.json`
-- [ ] T005 [P] Add `Dockerfile` (multi-stage: build server + web, run `dist/server/main.js` on Node 24 slim)
-- [ ] T006 [P] Add `cloudbuild.yaml` building the image and deploying to a **new** Cloud Run service — never the predecessor's
-- [ ] T007 Extend `.github/workflows/release.yml` with a deploy job gated on the release Action's `is-env` output, keyed off `steps.release.outputs.tag`
-- [ ] T008 Add an ESLint rule to `config/eslint.config.js` forbidding imports from `src/bindings/**` inside `src/core/**` — the dependency inversion the predecessor shipped, made impossible to regress quietly
+- [X] T001 Add runtime dependencies (`express`, `pg`, `pino`) and dev deps (`supertest`, `@types/express`, `@types/pg`) to `package.json`
+- [X] T002 [P] Add `tsconfig.build.json` emitting `dist/server` from `src/`, excluding `src/web/**` and `tests/**`
+- [X] T003 [P] Add `.env.example` documenting platform config only — `DATABASE_URL`, `PORT`, `LOG_LEVEL`, `DISCORD_BOT_TOKEN` — with a comment stating that anything a second tenant would need differently belongs in the store, not here, and that `DISCORD_BOT_TOKEN` is read **only** by the resolver behind `applications.token_ref`, never directly by a caller
+- [X] T004 [P] Add `scripts/migrate.mjs` — forward-only runner applying `migrations/*.sql` in order, recording applied names in a `schema_migrations` table, registered as `npm run migrate` in `package.json`
+- [X] T005 [P] Add `Dockerfile` (multi-stage: build server + web, run `dist/server/main.js` on Node 24 slim)
+- [X] T006 [P] Add `cloudbuild.yaml` building the image and deploying to a **new** Cloud Run service — never the predecessor's
+- [X] T007 Extend `.github/workflows/release.yml` with a deploy job gated on the release Action's `is-env` output, keyed off `steps.release.outputs.tag`
+- [X] T008 Add an ESLint rule to `config/eslint.config.js` forbidding imports from `src/bindings/**` inside `src/core/**` — the dependency inversion the predecessor shipped, made impossible to regress quietly
 
 **Checkpoint**: `npm run check:all` green; `npm run build` produces a runnable server bundle.
 
@@ -54,16 +54,16 @@ construction: the crossings, the enumeration probe, the timing assertion.
 **Purpose**: Ownership, the store, and the shape of the walk. **No user story can begin until
 this phase is done** — and specifically, no query may exist before the type that scopes it.
 
-- [ ] T009 Write `migrations/0001_the_invocation.sql` creating `applications`, `tenants`, `installs`, `source_registrations`, `destinations`, `spells`, `secrets`, `records` exactly as specified in [data-model.md](./data-model.md) — every **tenant-owned** table with `tenant_id NOT NULL`, every composite uniqueness including `tenant_id`, `UNIQUE (spell_id, dedupe_key)` on `records`, and `applications` as the one platform-layer table (nullable `tenant_id`, seeded with a single row for the Discord binding, plus the partial unique index that makes "one platform application per binding" actually hold — a plain `UNIQUE` does not, because Postgres treats NULLs as distinct)
-- [ ] T010 Implement `TenantRef` in `src/core/law/tenant-ref.ts` — a branded type whose brand symbol is **not exported**, with minting functions that take verified evidence only
-- [ ] T011 [P] Write `tests/unit/tenant-ref.test.ts` proving a `TenantRef` cannot be produced from a plain string or a request-shaped object without an explicit `as unknown as` cast
-- [ ] T012 Define the `Repository` interface in `src/db/repository.ts` — every method takes `TenantRef` first, per [contracts/inbound-http.md](./contracts/inbound-http.md); `ping()` is the sole exception and reads nothing
-- [ ] T013 [P] Implement `src/db/fake-repository.ts` — an in-memory implementation that **throws** if asked for rows belonging to a different tenant, so isolation is testable without a database
-- [ ] T014 Implement `src/db/pg-repository.ts` against the interface, with `beginRecord` translating a unique-violation into `'duplicate'` rather than throwing
-- [ ] T015 [P] Define the closed outcome vocabulary in `src/core/logistics/outcome.ts` — `pending | delivered | deduped | declined | refused | failed` — as a union type, so a seventh fails typecheck
-- [ ] T016 [P] Configure `pino` in `src/core/log.ts` with a redaction serializer keyed on secret-ish names, so a credential cannot reach a log line even if passed by mistake
-- [ ] T017 Implement `GET /health/live` and `GET /health/ready` in `src/server.ts` — liveness must not consult the database or Discord
-- [ ] T018 Implement the composition root in `src/main.ts` wiring config, repository, binding, and server, and failing loudly at startup on any missing required variable
+- [X] T009 Write `migrations/0001_the_invocation.sql` creating `applications`, `tenants`, `installs`, `source_registrations`, `destinations`, `spells`, `secrets`, `records` exactly as specified in [data-model.md](./data-model.md) — every **tenant-owned** table with `tenant_id NOT NULL`, every composite uniqueness including `tenant_id`, `UNIQUE (spell_id, dedupe_key)` on `records`, and `applications` as the one platform-layer table (nullable `tenant_id`, seeded with a single row for the Discord binding, plus the partial unique index that makes "one platform application per binding" actually hold — a plain `UNIQUE` does not, because Postgres treats NULLs as distinct)
+- [X] T010 Implement `TenantRef` in `src/core/law/tenant-ref.ts` — a branded type whose brand symbol is **not exported**, with minting functions that take verified evidence only
+- [X] T011 [P] Write `tests/unit/tenant-ref.test.ts` proving a `TenantRef` cannot be produced from a plain string or a request-shaped object without an explicit `as unknown as` cast
+- [X] T012 Define the `Repository` interface in `src/db/repository.ts` — every method takes `TenantRef` first, per [contracts/inbound-http.md](./contracts/inbound-http.md); `ping()` is the sole exception and reads nothing
+- [X] T013 [P] Implement `src/db/fake-repository.ts` — an in-memory implementation that **throws** if asked for rows belonging to a different tenant, so isolation is testable without a database
+- [X] T014 Implement `src/db/pg-repository.ts` against the interface, with `beginRecord` translating a unique-violation into `'duplicate'` rather than throwing
+- [X] T015 [P] Define the closed outcome vocabulary in `src/core/logistics/outcome.ts` — `pending | delivered | deduped | declined | refused | failed` — as a union type, so a seventh fails typecheck
+- [X] T016 [P] Configure `pino` in `src/core/log.ts` with a redaction serializer keyed on secret-ish names, so a credential cannot reach a log line even if passed by mistake
+- [X] T017 Implement `GET /health/live` and `GET /health/ready` in `src/server.ts` — liveness must not consult the database or Discord
+- [X] T018 Implement the composition root in `src/main.ts` wiring config, repository, binding, and server, and failing loudly at startup on any missing required variable
 
 **Checkpoint**: migrations apply to a real database; **quickstart scenario 9 passes** — with the database stopped, `/health/live` still answers `200` while `/health/ready` returns `503`; `TenantRef` cannot be forged; the fake repository refuses cross-tenant reads.
 

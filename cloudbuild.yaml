@@ -1,0 +1,47 @@
+# Build the image and deploy it to Cloud Run.
+#
+# The target is `grimoire` — a NEW service, never the predecessor's `snackbyte-discord`.
+# Sharing one service would couple the two deployments and make the migration's per-source
+# cutover and its rollback impossible: the old service must keep serving untouched while
+# the new one takes traffic one webhook at a time.
+
+substitutions:
+  _SERVICE: grimoire
+  _REGION: us-central1
+
+steps:
+  - id: build
+    name: gcr.io/cloud-builders/docker
+    args:
+      - build
+      - '-t'
+      - '${_REGION}-docker.pkg.dev/$PROJECT_ID/grimoire/${_SERVICE}:$TAG_NAME'
+      - '.'
+
+  - id: push
+    name: gcr.io/cloud-builders/docker
+    args:
+      - push
+      - '${_REGION}-docker.pkg.dev/$PROJECT_ID/grimoire/${_SERVICE}:$TAG_NAME'
+
+  - id: deploy
+    name: gcr.io/google.com/cloudsdktool/cloud-sdk
+    entrypoint: gcloud
+    args:
+      - run
+      - deploy
+      - '${_SERVICE}'
+      - '--image=${_REGION}-docker.pkg.dev/$PROJECT_ID/grimoire/${_SERVICE}:$TAG_NAME'
+      - '--region=${_REGION}'
+      - '--platform=managed'
+      # Always-on: the service holds connections and must not cold-start on every event.
+      - '--min-instances=1'
+      # Secrets arrive from Secret Manager, never from this file.
+      - '--update-secrets=DATABASE_URL=grimoire-database-url:latest,DISCORD_BOT_TOKEN=grimoire-discord-bot-token:latest'
+      - '--set-env-vars=LOG_LEVEL=info'
+
+images:
+  - '${_REGION}-docker.pkg.dev/$PROJECT_ID/grimoire/${_SERVICE}:$TAG_NAME'
+
+options:
+  logging: CLOUD_LOGGING_ONLY

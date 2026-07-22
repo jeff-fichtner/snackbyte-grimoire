@@ -19,6 +19,12 @@ concurrency:
 jobs:
   release:
     runs-on: ubuntu-latest
+    # Step outputs are not visible to dependent jobs unless the job re-exports them.
+    # Without this block `needs.release.outputs.*` is silently empty, the deploy job's
+    # `if` evaluates false, and nothing deploys — with no error anywhere.
+    outputs:
+      is-env: ${{ steps.release.outputs.is-env }}
+      tag: ${{ steps.release.outputs.tag }}
     steps:
       - uses: actions/checkout@v5
         with:
@@ -35,3 +41,32 @@ jobs:
       - name: Report the release tag
         if: steps.release.outputs.is-env == 'true'
         run: echo "Tagged ${{ steps.release.outputs.tag }}"
+
+  # Deploy only what was actually tagged. Gated on is-env so a push to a branch that is not
+  # a release channel does nothing, and keyed off the Action's tag so the image built is the
+  # one the tag names — never "whatever HEAD happens to be".
+  deploy:
+    needs: release
+    if: needs.release.outputs.is-env == 'true'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          ref: ${{ needs.release.outputs.tag }}
+
+      - id: auth
+        uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: ${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}
+          service_account: ${{ secrets.GCP_DEPLOY_SERVICE_ACCOUNT }}
+
+      - uses: google-github-actions/setup-gcloud@v2
+
+      - name: Build and deploy
+        run: |
+          gcloud builds submit \
+            --config cloudbuild.yaml \
+            --substitutions TAG_NAME=${{ needs.release.outputs.tag }}
