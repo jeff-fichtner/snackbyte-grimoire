@@ -8,8 +8,11 @@ RUN npm ci
 
 COPY tsconfig.json tsconfig.build.json vite.config.ts ./
 COPY src ./src
-# The server compiles to dist/server; the web surface bundles to dist/.
-RUN npx tsc -p tsconfig.build.json && npx vite build
+# ORDER MATTERS. `vite build` sets emptyOutDir and writes to dist/, so it wipes whatever
+# is already there — run it FIRST and let tsc add dist/server/ afterwards. The other order
+# builds a server bundle and then deletes it, producing an image that starts and
+# immediately exits with MODULE_NOT_FOUND.
+RUN npx vite build && npx tsc -p tsconfig.build.json
 
 FROM node:24-slim AS runtime
 WORKDIR /app

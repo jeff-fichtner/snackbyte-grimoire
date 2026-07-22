@@ -163,7 +163,7 @@ no distinguishable signal.
 - [ ] T047 [P] Add the quickstart driver scripts — `scripts/dev-send.mjs`, `scripts/dev-cross.mjs`, `scripts/dev-probe.mjs` — and register them in `package.json` as `dev:send`, `dev:cross`, `dev:probe`, so the commands in [quickstart.md](./quickstart.md) resolve
 - [X] T048 [P] Write `tests/integration/tenant-blast-radius.test.ts` — a tenant whose destination, secret, or spell config is broken fails only for that tenant, while another tenant's invocation in the same process still delivers (SC-009)
 - [X] T049 [P] Write `tests/integration/redaction.test.ts` asserting no secret value reaches a log line or an HTTP response, by deliberately passing a credential through both
-- [ ] T050 Deploy via `cloudbuild.yaml` to the new Cloud Run service and confirm `/health/ready` is `ready: true`, then run quickstart scenario 1 against the deployed URL with a real GitHub webhook
+- [X] T050 Deploy via `cloudbuild.yaml` to the new Cloud Run service and confirm `/health/ready` is `ready: true`, then run quickstart scenario 1 against the deployed URL with a real GitHub webhook
 - [ ] T051 Update `MIGRATION.md` cutover step 1 to record which infrastructure pieces landed here, and step 3 with the new service name
 
 ---

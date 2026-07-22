@@ -10,7 +10,7 @@
   },
   "scripts": {
     "dev": "vite",
-    "build": "vite build",
+    "build": "vite build && tsc -p tsconfig.build.json",
     "preview": "vite preview",
     "start": "node dist/server/main.js",
     "db:up": "node scripts/db.mjs up",
@@ -29,7 +29,8 @@
     "check:all": "npm run format:check && npm run lint && npm run typecheck && npm test",
     "spec:html": "spec-render",
     "spec:html:watch": "spec-render --watch",
-    "spec:html:clean": "spec-render --clean"
+    "spec:html:clean": "spec-render --clean",
+    "build:server": "tsc -p tsconfig.build.json"
   },
   "devDependencies": {
     "@eslint/js": "^9.39.4",
