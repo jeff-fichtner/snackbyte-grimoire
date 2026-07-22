@@ -24,7 +24,8 @@
     "spec:html": "spec-render",
     "spec:html:watch": "spec-render --watch",
     "spec:html:clean": "spec-render --clean",
-    "test:e2e": "TEST_DATABASE_URL=${TEST_DATABASE_URL:-postgresql://postgres@localhost:55432/grimoire} vitest run tests/integration/walk.e2e.test.ts"
+    "test:e2e": "TEST_DATABASE_URL=${TEST_DATABASE_URL:-postgresql://postgres@localhost:55432/grimoire} vitest run tests/integration/walk.e2e.test.ts",
+    "seed:dev": "node scripts/seed-dev.mjs"
   },
   "devDependencies": {
     "@eslint/js": "^9.39.4",
