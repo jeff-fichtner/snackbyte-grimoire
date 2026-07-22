@@ -17,6 +17,14 @@ to design, and it decides the shape of the repository, the law module, and every
 downstream. Everything else here is ordinary: an HTTP service, a Postgres-backed store, one
 delivery chokepoint, and a Discord binding that is the only place an SDK appears.
 
+## A note on vocabulary
+
+The spec says **community**; this plan, the data model, and the tasks say **tenant**. They are
+the same thing named for two audiences: a community is what an owner recognises, a tenant is
+what the isolation boundary is called in the schema and the type system. The mapping is
+one-to-one — the `tenants` table is the spec's `Community` — and it is stated here once so that
+no reader has to infer it.
+
 ## Technical Context
 
 **Language/Version**: TypeScript 6 (strict, ESM), Node 24 — fixed by the constitution's
