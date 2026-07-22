@@ -1,10 +1,10 @@
 # The Grimoire
 
 > "The uttering of the words is, indeed, usually a, or even the, leading incident in the
-> performance of the act." — J.L. Austin, *How to Do Things with Words*
+> performance of the act." — J.L. Austin, _How to Do Things with Words_
 
-Grimoire is a platform where chat communities own **spells** — stored sentences that *do
-things* when spoken — cast with verified authority and delivered with guarantees. It is
+Grimoire is a platform where chat communities own **spells** — stored sentences that _do
+things_ when spoken — cast with verified authority and delivered with guarantees. It is
 platform-agnostic by design: **Discord is the first binding**, and the architecture intends
 a handful of further platforms (Slack among them) if and when they are wanted. Nothing in
 this document names a platform except the section that binds one.
@@ -16,7 +16,7 @@ This document is the design element the whole system answers to. The constitutio
 
 ## 1. The concept: speech that acts
 
-Ordinary messages *describe*. A performative utterance *does* — "I now pronounce you," said
+Ordinary messages _describe_. A performative utterance _does_ — "I now pronounce you," said
 by the right person under the right conditions, changes the world. Austin's insight was
 that such speech has three requirements: a **conventional form** (the words must be a
 recognized formula), **felicity conditions** (the speaker must hold the standing — the
@@ -26,26 +26,26 @@ carried out).
 Grimoire is a machine for performative speech in chat communities. Its three platform
 branches are Austin's three requirements, engineered:
 
-| Austin | Grimoire | Question it answers |
-|---|---|---|
-| Conventional form | **the Language** | what can be said? |
-| Felicity conditions | **the Law** | who may say it, here, to whom? |
-| Execution | **the Logistics** | how does it physically, reliably happen? |
+| Austin              | Grimoire          | Question it answers                      |
+| ------------------- | ----------------- | ---------------------------------------- |
+| Conventional form   | **the Language**  | what can be said?                        |
+| Felicity conditions | **the Law**       | who may say it, here, to whom?           |
+| Execution           | **the Logistics** | how does it physically, reliably happen? |
 
 ## 2. The unifying relation: patterns and instances
 
 The system has exactly two sides, and one edge joins them:
 
-- **The platform** owns *patterns*: one language, one law, one logistics. Engineer-grown,
+- **The platform** owns _patterns_: one language, one law, one logistics. Engineer-grown,
   one of everything, code.
-- **Tenants** own *instances*: their spells and their nouns. Many of everything, data,
+- **Tenants** own _instances_: their spells and their nouns. Many of everything, data,
   every row possessed by exactly one owner.
 
 Every tenant-side thing is an instance of a platform-side pattern, and the edge is
 traversable in both directions: upward, every instance can name its pattern ("instance of
 what?"); downward, every pattern can enumerate its owned instances ("whose?"). The two
 sides meet only at run time, in the **invocation** — the moment a sentence is actually
-spoken. Statically the system is shelves of language and books of spells; it *exists* only
+spoken. Statically the system is shelves of language and books of spells; it _exists_ only
 while invocations walk it.
 
 ## 3. The structure
@@ -101,7 +101,7 @@ Three refusal points, in order, each guarding a different catastrophe:
 1. **Unspeakable** — the law refuses: unauthenticated, unowned, or unauthorized. Refused
    at speaking time.
 2. **Ungrammatical** — the language refuses: the sentence violates form or an agreement
-   rule. Refused at *authoring* time — the editor will not let an illegal spell be written.
+   rule. Refused at _authoring_ time — the editor will not let an illegal spell be written.
 3. **Undeliverable** — the logistics refuses to lie: it retries, backs off, records the
    outcome, and never reports done what did not happen.
 
@@ -114,15 +114,15 @@ Messages flow two ways, but no feature is required to use both. The pair of word
 the asymmetry:
 
 - An **invocation** is the in-way: the summons. Every feature has one — even silent ones.
-- An **incantation** is the out-way *when the outcome is speech*: a sentence said aloud,
+- An **incantation** is the out-way _when the outcome is speech_: a sentence said aloud,
   once. Not every invocation incants (a reaction that toggles a role is a wordless charm);
   no incantation happens uninvoked.
 
 The asymmetry is a property of **trigger species**, not of the app: some species open a
 **return channel** (an interaction owes its invoker a reply, promptly, and only there can
 a reply be private); others carry no return channel at all (an external call gets a bare
-acknowledgment; ambient events and the clock answer to no one). Speaking *outward* is
-always available; speaking *back* exists only where the trigger opened the channel.
+acknowledgment; ambient events and the clock answer to no one). Speaking _outward_ is
+always available; speaking _back_ exists only where the trigger opened the channel.
 
 ## 6. Agreement rules
 
@@ -134,7 +134,7 @@ Cross-part constraints that make a spell legal or refusable — the grammar's sy
 - **Authorship agreement** — tenant-authored spells may use charms only. Hexes appear only
   in engineer-authored spells with a human speaker exercising judgment.
 - **Standing agreement** — a spell acting on a member is legal only if the speaker's
-  authority covers the verb *and* the target, checked against the community's own power
+  authority covers the verb _and_ the target, checked against the community's own power
   structure at speaking time.
 
 ## 7. The drawn lines
@@ -142,17 +142,17 @@ Cross-part constraints that make a spell legal or refusable — the grammar's sy
 Boundary adjudications, so every future piece lands in exactly one place:
 
 - **Trigger vs Law** — a trigger is untrusted until the law admits it. An identifier in an
-  inbound path is trigger-data, a lookup hint; *believing* it is the law's job, and an
+  inbound path is trigger-data, a lookup hint; _believing_ it is the law's job, and an
   unknown identifier fails exactly like a forged signature.
-- **Logic vs Verb** — "post only if X": the *if* is logic, the *post* is a verb. What
+- **Logic vs Verb** — "post only if X": the _if_ is logic, the _post_ is a verb. What
   cannot change the world composes freely; what can is a verb and faces the charm/hex line.
 - **Verb vs Logistics** — "say this" is a verb; retrying, deduplicating, and rate-limiting
   it is logistics. **A verb never knows about rate limits; a spell never knows about
   media.**
-- **Spell vs Noun** — stored bindings are *spells* (compositions); nouns are what spells
+- **Spell vs Noun** — stored bindings are _spells_ (compositions); nouns are what spells
   point at. A routing rule is a spell; the webhook it feeds is a noun.
-- **Law vs Noun** — if deleting a row changes *who may act*, it is the law's ledger; if it
-  changes *what exists to act on*, it is a noun.
+- **Law vs Noun** — if deleting a row changes _who may act_, it is the law's ledger; if it
+  changes _what exists to act on_, it is a noun.
 - **Noun vs platform configuration** — if a second tenant would need a different value, it
   is a noun (data); if genuinely process-wide, it is configuration, which sits outside the
   model entirely (the stage, not the play).
@@ -161,7 +161,7 @@ Boundary adjudications, so every future piece lands in exactly one place:
 
 The platform cannot make hard things cheap; it makes hard things **additive**. The
 language grows verb by verb, trigger species by trigger species — and a tenant who reaches
-the edge of the vocabulary is a *signal*, not a support ticket: the request-a-verb loop is
+the edge of the vocabulary is a _signal_, not a support ticket: the request-a-verb loop is
 the product's growth mechanism.
 
 Some features are ordinary verbs whose **executor species** does not exist yet: anything
@@ -177,14 +177,14 @@ of the foundation.**
 
 The existing market sells three regions of this one grammar as three separate products:
 
-| Product category | In grammar terms | Their ceiling |
-|---|---|---|
-| Integration platforms (webhook relays) | external trigger species + one message verb | no presence in the community: no law, no interactive triggers |
-| Feature bots (prebuilt catalogues) | engineer-authored spells with config knobs | owners rent fused sentences; they never get the grammar |
-| No-code bot builders | a spell editor | vocabulary is not total (arbitrary logic in a flowchart costume) and every owner must bring their own application |
+| Product category                       | In grammar terms                            | Their ceiling                                                                                                     |
+| -------------------------------------- | ------------------------------------------- | ----------------------------------------------------------------------------------------------------------------- |
+| Integration platforms (webhook relays) | external trigger species + one message verb | no presence in the community: no law, no interactive triggers                                                     |
+| Feature bots (prebuilt catalogues)     | engineer-authored spells with config knobs  | owners rent fused sentences; they never get the grammar                                                           |
+| No-code bot builders                   | a spell editor                              | vocabulary is not total (arbitrary logic in a flowchart costume) and every owner must bring their own application |
 
 Grimoire is the factorization: one language, one law, one logistics — with integrations,
-catalogues, and composition as *regions of the same grammar*, sharing five of six parts and
+catalogues, and composition as _regions of the same grammar_, sharing five of six parts and
 differing only in who authored the spell and which trigger species fires it.
 
 ## 10. Bindings

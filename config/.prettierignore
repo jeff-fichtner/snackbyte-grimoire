@@ -1,0 +1,14 @@
+node_modules/
+dist/
+coverage/
+package-lock.json
+*.tsbuildinfo
+
+# Spec-workflow scaffolding — not shipped code, not formatted by the app gate
+.specify/
+.claude/
+specs/
+CLAUDE.md
+
+# Design artifacts — synced from the Claude Design project, not hand-edited here
+design/

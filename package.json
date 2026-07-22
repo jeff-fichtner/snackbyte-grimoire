@@ -6,6 +6,26 @@
   "description": "Grimoire — spells for your community: performative speech for chat platforms",
   "license": "UNLICENSED",
   "engines": {
-    "node": ">=24"
+    "node": ">=24 <25"
+  },
+  "scripts": {
+    "lint": "eslint .",
+    "format": "prettier --config config/.prettierrc.json --ignore-path config/.prettierignore --write \"**/*.{ts,tsx,js,mjs,json,md}\"",
+    "format:check": "prettier --config config/.prettierrc.json --ignore-path config/.prettierignore --check \"**/*.{ts,tsx,js,mjs,json,md}\"",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "check:all": "npm run format:check && npm run lint && npm run typecheck && npm test"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.39.4",
+    "@types/node": "^25.9.1",
+    "eslint": "^9.39.4",
+    "eslint-config-prettier": "^10.1.8",
+    "globals": "^17.6.0",
+    "prettier": "^3.8.3",
+    "typescript": "^6.0.3",
+    "typescript-eslint": "^8.60.0",
+    "vitest": "^4.1.8"
   }
 }
