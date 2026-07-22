@@ -95,6 +95,14 @@ export interface Repository {
   /** Record something the law refused, where no spell was reached. */
   recordRefusal(tenant: TenantRef, input: RecordInput, detail?: string): Promise<void>;
 
+  /**
+   * Record that a repeat of an already-claimed event arrived and was not acted on.
+   *
+   * Written outside the claim's uniqueness on purpose: the ledger must be able to show that
+   * a source resent something, which a single unique row per event cannot express.
+   */
+  recordDeduped(tenant: TenantRef, input: RecordInput): Promise<void>;
+
   /** Reachability, for readiness. Reads no tenant data, so it takes no reference. */
   ping(): Promise<boolean>;
 

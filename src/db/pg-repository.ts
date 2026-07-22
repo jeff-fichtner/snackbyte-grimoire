@@ -141,7 +141,7 @@ export class PgRepository implements Repository {
     await this.pool.query(
       `INSERT INTO records (tenant_id, spell_id, source, event_type, dedupe_key, outcome, detail, settled_at)
        VALUES ($1, $2, $3, $4, $5, 'refused', $6, now())
-       ON CONFLICT (spell_id, dedupe_key) DO NOTHING`,
+       ON CONFLICT (spell_id, dedupe_key) WHERE outcome <> 'deduped' DO NOTHING`,
       [
         tenantId(tenant),
         input.spellId,
@@ -150,6 +150,14 @@ export class PgRepository implements Repository {
         input.dedupeKey,
         detail ?? null,
       ],
+    );
+  }
+
+  async recordDeduped(tenant: TenantRef, input: RecordInput): Promise<void> {
+    await this.pool.query(
+      `INSERT INTO records (tenant_id, spell_id, source, event_type, dedupe_key, outcome, settled_at)
+       VALUES ($1, $2, $3, $4, $5, 'deduped', now())`,
+      [tenantId(tenant), input.spellId, input.source, input.eventType, input.dedupeKey],
     );
   }
 

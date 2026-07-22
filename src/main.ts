@@ -1,13 +1,19 @@
 /**
  * The composition root — the one place concrete implementations are chosen and wired.
  *
- * Everything below this file takes its collaborators as arguments, which is what lets the
- * whole walk be tested against a fake store with no database in sight.
+ * Everything below takes its collaborators as arguments, which is what lets the whole walk
+ * be tested against a fake store with no database and a stub platform.
  */
 import { loadConfig } from './config.js';
+import { createDiscordBinding } from './bindings/discord/index.js';
+import { createRegistry } from './bindings/registry.js';
 import { childLog } from './core/log.js';
 import { PgRepository } from './db/pg-repository.js';
 import { createServer } from './server.js';
+// Registering the vocabulary is a side effect of import, which is what keeps core free of
+// a switch statement enumerating them.
+import './core/language/verbs/post-message.js';
+import './sources/github/adapter.js';
 
 const log = childLog('main');
 
@@ -16,7 +22,24 @@ async function start(): Promise<void> {
   const config = loadConfig();
 
   const repo = new PgRepository(config.databaseUrl);
-  const app = createServer({ repo });
+
+  // Identity is a lookup: the binding is handed a registry, never a token.
+  const registry = createRegistry({
+    repo,
+    resolvePlatformToken: (ref) =>
+      ref === 'DISCORD_BOT_TOKEN' ? config.discordBotToken : undefined,
+  });
+  const binding = createDiscordBinding({ registry });
+
+  const application = await repo.getPlatformApplication('discord');
+  if (!application) {
+    throw new Error(
+      'no platform application row for binding "discord". Seed one — identity is data, ' +
+        'and the service will not invent it.',
+    );
+  }
+
+  const app = createServer({ repo, binding, applicationId: application.id });
 
   const server = app.listen(config.port, () => {
     log.info({ port: config.port }, 'grimoire is listening');
