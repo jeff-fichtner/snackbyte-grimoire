@@ -124,14 +124,22 @@ try {
         }),
       ],
     );
-    // The predecessor's clickup route, translated: no condition, every status change relays.
+    // The predecessor's clickup route, translated.
     await client.query(
       `INSERT INTO spells (id, tenant_id, name, trigger_species, source, event_type, condition, verb, verb_config)
-       VALUES ($1,$2,$3,'external_call','clickup','taskStatusUpdated',NULL,'post_message',$4)`,
+       VALUES ($1,$2,$3,'external_call','clickup','taskStatusUpdated',$4,'post_message',$5)`,
       [
         randomUUID(),
         tenantId,
         'Relay the task status',
+        // Creating a task also fires taskStatusUpdated, with no `before` — there was no prior
+        // status to leave. `evaluate` reads an absent fact as '', so this predicate says
+        // exactly "there was a previous status", and a creation is DECLINED rather than
+        // rendered as an arrow pointing away from nothing.
+        JSON.stringify({
+          op: 'not',
+          of: { op: 'equals', fact: 'status_before', value: '' },
+        }),
         JSON.stringify({
           destinationId,
           transform: { template: '{user}: {status_before} → **{status}** — {url}' },
