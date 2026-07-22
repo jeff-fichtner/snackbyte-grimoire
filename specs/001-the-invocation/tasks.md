@@ -36,7 +36,7 @@ construction: the crossings, the enumeration probe, the timing assertion.
 - [ ] T001 Add runtime dependencies (`express`, `pg`, `pino`) and dev deps (`supertest`, `@types/express`, `@types/pg`) to `package.json`
 - [ ] T002 [P] Add `tsconfig.build.json` emitting `dist/server` from `src/`, excluding `src/web/**` and `tests/**`
 - [ ] T003 [P] Add `.env.example` documenting platform config only — `DATABASE_URL`, `PORT`, `LOG_LEVEL`, `DISCORD_BOT_TOKEN` — with a comment stating that anything a second tenant would need differently belongs in the store, not here
-- [ ] T004 [P] Add `scripts/migrate.mjs` — forward-only runner applying `migrations/*.sql` in order, recording applied names in a `schema_migrations` table
+- [ ] T004 [P] Add `scripts/migrate.mjs` — forward-only runner applying `migrations/*.sql` in order, recording applied names in a `schema_migrations` table, registered as `npm run migrate` in `package.json`
 - [ ] T005 [P] Add `Dockerfile` (multi-stage: build server + web, run `dist/server/main.js` on Node 24 slim)
 - [ ] T006 [P] Add `cloudbuild.yaml` building the image and deploying to a **new** Cloud Run service — never the predecessor's
 - [ ] T007 Extend `.github/workflows/release.yml` with a deploy job gated on the release Action's `is-env` output, keyed off `steps.release.outputs.tag`
@@ -62,7 +62,7 @@ this phase is done** — and specifically, no query may exist before the type th
 - [ ] T017 Implement `GET /health/live` and `GET /health/ready` in `src/server.ts` — liveness must not consult the database or Discord
 - [ ] T018 Implement the composition root in `src/main.ts` wiring config, repository, binding, and server, and failing loudly at startup on any missing required variable
 
-**Checkpoint**: migrations apply to a real database; health endpoints answer; `TenantRef` cannot be forged; the fake repository refuses cross-tenant reads.
+**Checkpoint**: migrations apply to a real database; **quickstart scenario 9 passes** — with the database stopped, `/health/live` still answers `200` while `/health/ready` returns `503`; `TenantRef` cannot be forged; the fake repository refuses cross-tenant reads.
 
 ---
 
@@ -91,7 +91,7 @@ signed event; observe the message and a `delivered` record.
 - [ ] T029 [US1] Implement `deliver()` in `src/core/logistics/deliver.ts` — the single chokepoint; happy path only at this stage
 - [ ] T030 [US1] Implement the walk in `src/core/invocation.ts` — trigger → law → spell → logic → verb → nouns → logistics, in that order, each spell handled independently so one failure cannot block another
 - [ ] T031 [US1] Implement `POST /invoke/:registrationId` in `src/server.ts` with `express.raw()` mounted on this route only, verifying **before** parsing, and answering `202` once the record is durably `pending`
-- [ ] T032 [US1] Add `scripts/seed-dev.mjs` creating **two** tenants with their own registrations, spells, and destinations — one tenant cannot demonstrate the property US2 exists to prove
+- [ ] T032 [US1] Add `scripts/seed-dev.mjs` (registered as `npm run seed:dev`) creating **two** tenants with their own registrations, spells, and destinations — one tenant cannot demonstrate the property US2 exists to prove
 
 **Checkpoint**: quickstart scenarios 1–3 pass — a spell speaks, an edit takes effect with no restart, a condition declines and is recorded as `declined`.
 
@@ -120,7 +120,7 @@ undeliverable — and confirm the record shows each accurately.
 - [ ] T037 [US3] Implement dedupe in `src/core/logistics/deliver.ts` by claiming `(spell_id, dedupe_key)` **before** delivery, treating the unique violation as `deduped`
 - [ ] T038 [P] [US3] Implement permanent-vs-transient classification and bounded backoff in `src/core/logistics/retry.ts`, lifting the predecessor's rule per MIGRATION Tier 1
 - [ ] T039 [US3] Implement the per-tenant concurrency cap in `src/core/logistics/deliver.ts` — the fairness mechanism required by FR-019 and Principle III
-- [ ] T040 [P] [US3] Extend the web surface's Records screen to read live records rather than fixtures, replacing `src/web/fixtures.ts` usage on that screen only
+- [ ] T040 [P] [US3] Write `tests/integration/spell-independence.test.ts` — two spells match one event, the first fails, the second still delivers (FR-010)
 
 **Checkpoint**: quickstart scenarios 6–8 pass — duplicates act once, failures record as failures, recovery needs no restart.
 
@@ -156,10 +156,11 @@ no distinguishable signal.
 
 ## Phase 6: Polish & Cross-Cutting
 
-- [ ] T047 [P] Add the quickstart driver scripts — `scripts/dev-send.mjs`, `scripts/dev-cross.mjs`, `scripts/dev-probe.mjs` — matching [quickstart.md](./quickstart.md)
-- [ ] T048 [P] Write `tests/integration/redaction.test.ts` asserting no secret value reaches a log line or an HTTP response, by deliberately passing a credential through both
-- [ ] T049 Deploy via `cloudbuild.yaml` to the new Cloud Run service and confirm `/health/ready` is `ready: true`, then run quickstart scenario 1 against the deployed URL with a real GitHub webhook
-- [ ] T050 Update `MIGRATION.md` cutover step 1 to record which infrastructure pieces landed here, and step 3 with the new service name
+- [ ] T047 [P] Add the quickstart driver scripts — `scripts/dev-send.mjs`, `scripts/dev-cross.mjs`, `scripts/dev-probe.mjs` — and register them in `package.json` as `dev:send`, `dev:cross`, `dev:probe`, so the commands in [quickstart.md](./quickstart.md) resolve
+- [ ] T048 [P] Write `tests/integration/tenant-blast-radius.test.ts` — a tenant whose destination, secret, or spell config is broken fails only for that tenant, while another tenant's invocation in the same process still delivers (SC-009)
+- [ ] T049 [P] Write `tests/integration/redaction.test.ts` asserting no secret value reaches a log line or an HTTP response, by deliberately passing a credential through both
+- [ ] T050 Deploy via `cloudbuild.yaml` to the new Cloud Run service and confirm `/health/ready` is `ready: true`, then run quickstart scenario 1 against the deployed URL with a real GitHub webhook
+- [ ] T051 Update `MIGRATION.md` cutover step 1 to record which infrastructure pieces landed here, and step 3 with the new service name
 
 ---
 

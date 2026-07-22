@@ -209,6 +209,8 @@ condition, refused, and undeliverable — and confirm the record shows each accu
 ### Key Entities
 
 - **Community** — an independent owner of a book. Everything else belongs to exactly one.
+- **Install** — the recorded fact that the platform may act in one particular community. Set
+  up by hand in this feature; the flow that establishes it is a later feature.
 - **Spell** — a stored sentence owned by a community: what starts it, an optional condition,
   what it says, and where it says it.
 - **Source registration** — a community's relationship with one outside event source,
