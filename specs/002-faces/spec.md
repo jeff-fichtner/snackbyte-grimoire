@@ -185,7 +185,10 @@ spell at it, and confirm messages arrive under the pre-existing name and avatar.
   create, list, rename, re-avatar, delete, speak-through — MUST be confined to the community
   that owns it.
 - **FR-006**: A community MUST be able to list its own faces, and that listing MUST reveal
-  nothing about any other community's faces, including whether any exist.
+  nothing about any other community's faces, including whether any exist. Listing, like
+  creating, requires the platform to hold the management authority in that community; where it
+  is absent, listing MUST fail clearly rather than return an empty or partial result that could
+  be mistaken for "no faces".
 - **FR-007**: A face owned by one community MUST NOT be nameable, reachable, or discoverable by
   any other community; an attempt to operate on another community's face MUST be refused and
   leave the face unchanged.
