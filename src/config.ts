@@ -14,7 +14,7 @@ function required(name: string): string {
   const value = process.env[name];
   if (value === undefined || value.trim() === '') {
     throw new Error(
-      `${name} is not set. It is required platform configuration — see .env.example. ` +
+      `${name} is not set. It is required platform configuration — see .env.local.example. ` +
         'Refusing to start rather than guess.',
     );
   }
