@@ -9,6 +9,19 @@ logistics over spells · nouns). Two substantive additions relative to the prede
   - Principle I now also forbids binding special-cases (core never names a platform).
   - Principle IV now governs logic forms explicitly (one total rule language, everywhere) —
     closing a gap the predecessor deferred to its composer spec.
+
+SYNC IMPACT REPORT
+==================
+v1.0.0 → v1.0.1 (PATCH — clarification, no principle changed).
+Trigger: spec 002 (faces) surfaced a terminology collision — "face" was used for both the
+lexicon NOUN (a tenant's custom speaking identity, per GRIMOIRE.md) and, in two places,
+inherited-from-the-predecessor senses of "app surface". Separated so "face" now means only
+the noun:
+  - Principle VIII: "reachable by every face" → "reachable by every capability".
+  - Technology & Platform Constraints (Shape): "core depending on no face" → "core depending
+    on no binding" (consistent with "Core imports no binding SDK" in the same section).
+The remaining use — "the next spell, face, or rule" (intro) — is the noun and is unchanged.
+No dependent template or doc references the two edited phrases; no other propagation needed.
 -->
 
 # Grimoire Constitution
@@ -197,7 +210,7 @@ unscoped.
   prevents accidents; only unforgeable derivation prevents attacks.
 - **The law's layers MUST NOT be merged.** Tenant authority ("owns this community at
   all?") is more fundamental than any capability and lives in core, reachable by every
-  face; member authority ("holds this power here?") is checked per capability. Row
+  capability; member authority ("holds this power here?") is checked per capability. Row
   presence is never authorization.
 - Nothing that identifies a tenant may live in process configuration or be defaulted when
   absent. **Tenant identity is an argument, never an ambient.**
@@ -210,7 +223,7 @@ in production, quietly, for someone else.
 
 - **Language/runtime**: TypeScript (ESM, strict), pinned Node major.
 - **Shape**: one combined always-on service (HTTP surface + binding connections) until
-  scale demands otherwise; any split MUST preserve core depending on no face.
+  scale demands otherwise; any split MUST preserve core depending on no binding.
 - **Bindings**: each binding owns its SDK and mounts trigger species, media, and law hooks.
   Core imports no binding SDK. Discord is the first binding.
 - **Application identity is data**: each binding's application/credential is a row resolved
@@ -242,4 +255,4 @@ clarifications), propagated to dependent templates and docs in the same change. 
 specs are checked against these principles before implementation; the Technology &
 Platform Constraints are fixed — changing them is an amendment, not a per-feature choice.
 
-**Version**: 1.0.0 | **Ratified**: 2026-07-21 | **Last Amended**: 2026-07-21
+**Version**: 1.0.1 | **Ratified**: 2026-07-21 | **Last Amended**: 2026-07-23
