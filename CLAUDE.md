@@ -24,3 +24,14 @@ Spec-driven development via GitHub Spec Kit: principles live in
 built. The spec series is designed from the model's structure — when cutting new specs,
 place every piece in exactly one part of the grammar and name the agreement rules it must
 satisfy.
+
+**Versioning tracks the spec series — the minor equals the spec number.** `package.json`'s
+`MAJOR.MINOR` is the source; CI (`snackbyte-release-flow-action`, `version-strategy: build-id`)
+derives the PATCH — **never write the patch.** The **minor is the spec number** (spec 002 →
+`0.2`, spec 003 → `0.3`), and it is bumped exactly once, **when the `spec/NNN-*` branch is
+created** — that branch creation IS the bump, and `/speckit-git-specify-branch` performs it.
+(Spec 001 shipped at `0.2`; treat that as a legacy off-by-one, not the rule.) Do **NOT** bump the
+minor for operational or non-spec work (wiring a source, infra/config, template edits — that work
+rides the current minor), nor a second time on the same spec, nor on merge, nor to dodge a tag
+collision (fix the collision, do not invent a version). A stray bump is **UNDONE — rewritten out
+of history, not reverted forward — and its tags deleted.**
