@@ -127,21 +127,22 @@ try {
       source: 'github',
       eventType: 'push',
       condition: { op: 'not', of: { op: 'equals', fact: 'branch', value: '' } },
-      template: '{sender} pushed to **{branch}** — {commit_message}\n{compare}',
+      template:
+        '📦 `{sender}` pushed to **{branch}** of **{repository}**\n> {commit_message}\n{compare}',
     },
     {
       name: 'Relay the deployment',
       source: 'github',
       eventType: 'release',
       condition: { op: 'startsWith', fact: 'tag', value: 'v' },
-      template: '{repository} released **{tag}** — {url}',
+      template: '🚀 **{repository}** released **{tag}**\n{url}',
     },
     {
       name: 'Relay the task status',
       source: 'clickup',
       eventType: 'taskStatusUpdated',
       condition: { op: 'not', of: { op: 'equals', fact: 'status_before', value: '' } },
-      template: '{user}: {status_before} → **{status}** — {url}',
+      template: '📋 **{status_before}** → **{status}**  ·  moved by {user}\n{url}',
     },
   ];
   for (const s of spells) {
