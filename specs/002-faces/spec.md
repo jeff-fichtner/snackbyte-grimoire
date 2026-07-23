@@ -59,6 +59,9 @@ the platform's. Fully testable without any other user story.
 3. **Given** a spell that speaks through a face, **When** it is invoked, **Then** the message
    passes through the same single delivery point and is recorded identically to a message the
    platform sends as itself — same guarantees, same record.
+4. **Given** a face a spell speaks through, **When** the community renames the face or changes
+   its avatar, **Then** the spell's next message appears under the new name or avatar, with no
+   restart or redeployment.
 
 ---
 
@@ -210,25 +213,31 @@ spell at it, and confirm messages arrive under the pre-existing name and avatar.
   same protected way as every other credential — never rendered into a message, never returned
   in a listing, and never exposed in any browsable form.
 
+**Modifying a face**
+
+- **FR-014**: A community MUST be able to rename a face and change its avatar after creation,
+  and the change MUST take effect on the face's next message with no restart or redeployment.
+  Modifying a face is confined to its owning community by FR-005.
+
 **Revoking a face**
 
-- **FR-014**: A community MUST be able to delete a face, after which the platform can no longer
+- **FR-015**: A community MUST be able to delete a face, after which the platform can no longer
   speak through it.
-- **FR-015**: When a spell is invoked against a face that no longer exists, the invocation MUST
+- **FR-016**: When a spell is invoked against a face that no longer exists, the invocation MUST
   fail cleanly and be recorded as failed — never recorded or reported as delivered.
-- **FR-016**: Deleting a face MUST NOT alter messages that face has already delivered; deletion
+- **FR-017**: Deleting a face MUST NOT alter messages that face has already delivered; deletion
   revokes future use only.
 
 **Preserved guarantees**
 
-- **FR-017**: Introducing faces MUST NOT change how a message the platform sends as itself is
+- **FR-018**: Introducing faces MUST NOT change how a message the platform sends as itself is
   produced, delivered, or recorded — speaking as the platform remains available and unchanged.
-- **FR-018**: Delivery through a face MUST classify failures the same way delivery as the
+- **FR-019**: Delivery through a face MUST classify failures the same way delivery as the
   platform does — permanent refusals are not retried; temporary ones are retried a bounded
   number of times with increasing delays that honour any stated wait time.
-- **FR-019**: The platform's core MUST remain free of any platform-specific notion of a face;
-  the knowledge of how a face is created, listed, spoken through, and deleted MUST live only in
-  the binding that owns that platform.
+- **FR-020**: The platform's core MUST remain free of any platform-specific notion of a face;
+  the knowledge of how a face is created, listed, renamed, spoken through, and deleted MUST
+  live only in the binding that owns that platform.
 
 ### Key Entities
 
