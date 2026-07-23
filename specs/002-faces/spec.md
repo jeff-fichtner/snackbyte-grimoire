@@ -154,9 +154,10 @@ spell at it, and confirm messages arrive under the pre-existing name and avatar.
   authority the platform may not have been granted in a given community. When it is absent,
   creation and listing fail clearly, and the community is told what is missing — the platform
   does not pretend a face was created.
-- **A destination reaches its limit on faces.** A channel has a hard cap on how many faces can
-  exist in it. When the cap is reached, creating another fails clearly rather than silently
-  displacing an existing one.
+- **A channel reaches its limit on delivery webhooks.** A channel has a hard cap on how many
+  webhooks can exist in it. Because all of a channel's faces share one webhook, this binds only
+  in the extreme; when it does, establishing the channel's webhook fails clearly rather than
+  silently displacing an existing one.
 - **A face is deleted between an event arriving and its delivery.** The invocation fails
   cleanly and is recorded as failed; nothing is reported delivered.
 - **The platform's identity behind a face is itself removed or forbidden.** Speaking through
@@ -202,8 +203,9 @@ spell at it, and confirm messages arrive under the pre-existing name and avatar.
 
 - **FR-009**: A spell MUST be able to speak through a face, so its message appears under the
   face's chosen name and avatar rather than the platform's own identity.
-- **FR-010**: The name and avatar a message appears under MUST be chosen per message, so a
-  single face can carry more than one persona.
+- **FR-010**: The name and avatar a message appears under MUST be applied per message, so many
+  faces MAY share one channel's delivery credential — the platform needs about one such
+  credential per channel however many faces speak there.
 - **FR-011**: A message spoken through a face MUST pass through the same single delivery point
   as a message the platform sends as itself; no path may bypass it.
 - **FR-012**: A message spoken through a face MUST be subject to the same delivery guarantees
@@ -242,9 +244,12 @@ spell at it, and confirm messages arrive under the pre-existing name and avatar.
 ### Key Entities
 
 - **Face**: A community-owned custom speaking identity — a name and an avatar — that a spell
-  speaks through. Belongs to exactly one community and lives in one of its channels. Realised
-  by a speaking credential held in the protected credential store and reached only by
-  reference. A face is either _created_ by the platform or _adopted_ from a supplied identity.
+  speaks through. Belongs to exactly one community and lives in one of its channels. A channel
+  may hold many faces; they are all delivered through one **per-channel speaking credential**
+  (a webhook) held in the protected credential store and reached only by reference — the
+  credential is established when the channel's first face is created and retired with its last.
+  A face is either _created_ (the platform establishes the channel's credential) or _adopted_
+  (a supplied credential is accepted).
 - **Spell (extended)**: A stored sentence may now name a face to speak through. A spell without
   a face speaks as the platform, exactly as before; a spell with a face speaks under the
   face's name and avatar. A spell may only name a face its own community owns.
@@ -277,9 +282,10 @@ spell at it, and confirm messages arrive under the pre-existing name and avatar.
   creating or listing faces additionally requires a management authority that admission may or
   may not include; where it is absent, those operations fail clearly and the rest of the
   feature (adopt, speak-through, delete) still works.
-- A channel imposes a hard limit on how many faces can exist in it; the platform needs
-  approximately one face per channel because a single face carries unlimited personas via the
-  per-message name and avatar, so the limit is not expected to bind in normal use.
+- A channel imposes a hard limit on how many delivery webhooks can exist in it; because all of a
+  channel's faces share one webhook (the name and avatar are per-message), the platform needs
+  about one webhook per channel however many faces speak there, so the limit is not expected to
+  bind in normal use.
 - Faces are provisioned for communities that already exist in the platform (as they are seeded
   today); a self-service install flow is not assumed and is not required for this feature.
 - The credential store, tenant ownership, the single delivery point, and the honest record all
