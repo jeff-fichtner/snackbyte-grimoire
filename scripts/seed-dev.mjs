@@ -120,7 +120,7 @@ try {
         JSON.stringify({ op: 'startsWith', fact: 'tag', value: 'v' }),
         JSON.stringify({
           destinationId,
-          transform: { template: '{repository} released **{tag}** — {url}' },
+          transform: { template: '🚀 **{repository}** released **{tag}**\n{url}' },
         }),
       ],
     );
@@ -144,7 +144,8 @@ try {
         JSON.stringify({
           destinationId,
           transform: {
-            template: '{sender} pushed to **{branch}** — {commit_message}\n{compare}',
+            template:
+              '📦 `{sender}` pushed to **{branch}** of **{repository}**\n> {commit_message}\n{compare}',
           },
         }),
       ],
@@ -167,7 +168,9 @@ try {
         }),
         JSON.stringify({
           destinationId,
-          transform: { template: '{user}: {status_before} → **{status}** — {url}' },
+          transform: {
+            template: '📋 **{status_before}** → **{status}**  ·  moved by {user}\n{url}',
+          },
         }),
       ],
     );
