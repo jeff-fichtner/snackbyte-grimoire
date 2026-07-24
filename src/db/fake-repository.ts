@@ -10,7 +10,9 @@ import { type TenantRef, tenantId } from '../core/law/tenant-ref.js';
 import type { TerminalOutcome } from '../core/logistics/outcome.js';
 import type {
   Application,
+  CreateFaceInput,
   Destination,
+  Face,
   RecordHandle,
   RecordInput,
   Repository,
@@ -24,6 +26,14 @@ interface OwnedSpell extends Spell {
 interface OwnedDestination extends Destination {
   tenantId: string;
 }
+interface OwnedFace extends Face {
+  tenantId: string;
+}
+interface StoredSecret {
+  tenantId: string;
+  ref: string;
+  value: string;
+}
 interface StoredRecord extends RecordInput {
   id: string;
   tenantId: string;
@@ -36,7 +46,8 @@ export interface FakeSeed {
   applications?: Application[];
   spells?: OwnedSpell[];
   destinations?: OwnedDestination[];
-  secrets?: { tenantId: string; ref: string; value: string }[];
+  secrets?: StoredSecret[];
+  faces?: OwnedFace[];
 }
 
 export class CrossTenantAccess extends Error {
@@ -49,10 +60,16 @@ export class CrossTenantAccess extends Error {
 export class FakeRepository implements Repository {
   private records: StoredRecord[] = [];
   private nextId = 1;
+  /** Mutable so putSecret/deleteSecret and the face lifecycle can write at runtime. */
+  private secretStore: StoredSecret[];
+  private faces: OwnedFace[];
   /** Set true to make every call reject, for readiness and store-unavailable tests. */
   public unavailable = false;
 
-  constructor(private readonly seed: FakeSeed = {}) {}
+  constructor(private readonly seed: FakeSeed = {}) {
+    this.secretStore = [...(seed.secrets ?? [])];
+    this.faces = [...(seed.faces ?? [])];
+  }
 
   private live(): void {
     if (this.unavailable) throw new Error('store unavailable');
@@ -94,12 +111,104 @@ export class FakeRepository implements Repository {
 
   async resolveSecret(tenant: TenantRef, ref: string): Promise<string | null> {
     this.live();
-    const found = this.seed.secrets?.find((s) => s.ref === ref);
+    const found = this.secretStore.find((s) => s.ref === ref && s.tenantId === tenantId(tenant));
+    return found?.value ?? null;
+  }
+
+  async putSecret(tenant: TenantRef, ref: string, value: string): Promise<void> {
+    this.live();
+    const existing = this.secretStore.find((s) => s.ref === ref && s.tenantId === tenantId(tenant));
+    if (existing) existing.value = value;
+    else this.secretStore.push({ tenantId: tenantId(tenant), ref, value });
+  }
+
+  async deleteSecret(tenant: TenantRef, ref: string): Promise<void> {
+    this.live();
+    this.secretStore = this.secretStore.filter(
+      (s) => !(s.ref === ref && s.tenantId === tenantId(tenant)),
+    );
+  }
+
+  async createFace(tenant: TenantRef, input: CreateFaceInput): Promise<Face> {
+    this.live();
+    const face: OwnedFace = {
+      id: String(this.nextId++),
+      tenantId: tenantId(tenant),
+      installId: input.installId,
+      channelRef: input.channelRef,
+      name: input.name,
+      avatarUrl: input.avatarUrl ?? null,
+      secretRef: input.secretRef,
+      origin: input.origin,
+    };
+    this.faces.push(face);
+    return face;
+  }
+
+  async listFaces(tenant: TenantRef, channelRef?: string): Promise<Face[]> {
+    this.live();
+    return this.faces.filter(
+      (f) =>
+        f.tenantId === tenantId(tenant) &&
+        (channelRef === undefined || f.channelRef === channelRef),
+    );
+  }
+
+  async getFace(tenant: TenantRef, faceId: string): Promise<Face | null> {
+    this.live();
+    const found = this.faces.find((f) => f.id === faceId);
     if (!found) return null;
     if (found.tenantId !== tenantId(tenant)) {
-      throw new CrossTenantAccess(`secret ${ref}`, tenantId(tenant), found.tenantId);
+      throw new CrossTenantAccess(`face ${faceId}`, tenantId(tenant), found.tenantId);
     }
-    return found.value;
+    return found;
+  }
+
+  async renameFace(
+    tenant: TenantRef,
+    faceId: string,
+    changes: { name?: string; avatarUrl?: string | null },
+  ): Promise<void> {
+    this.live();
+    const found = this.faces.find((f) => f.id === faceId);
+    if (!found) return;
+    if (found.tenantId !== tenantId(tenant)) {
+      throw new CrossTenantAccess(`face ${faceId}`, tenantId(tenant), found.tenantId);
+    }
+    if (changes.name !== undefined) found.name = changes.name;
+    if (changes.avatarUrl !== undefined) found.avatarUrl = changes.avatarUrl;
+  }
+
+  async deleteFace(
+    tenant: TenantRef,
+    faceId: string,
+  ): Promise<{ wasLastInChannel: boolean } | null> {
+    this.live();
+    const found = this.faces.find((f) => f.id === faceId);
+    if (!found) return null;
+    if (found.tenantId !== tenantId(tenant)) {
+      throw new CrossTenantAccess(`face ${faceId}`, tenantId(tenant), found.tenantId);
+    }
+    this.faces = this.faces.filter((f) => f.id !== faceId);
+    const remaining = this.faces.filter(
+      (f) =>
+        f.tenantId === tenantId(tenant) &&
+        f.installId === found.installId &&
+        f.channelRef === found.channelRef,
+    ).length;
+    return { wasLastInChannel: remaining === 0 };
+  }
+
+  async countChannelFaces(
+    tenant: TenantRef,
+    installId: string,
+    channelRef: string,
+  ): Promise<number> {
+    this.live();
+    return this.faces.filter(
+      (f) =>
+        f.tenantId === tenantId(tenant) && f.installId === installId && f.channelRef === channelRef,
+    ).length;
   }
 
   async beginRecord(tenant: TenantRef, input: RecordInput): Promise<RecordHandle | 'duplicate'> {

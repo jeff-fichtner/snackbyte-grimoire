@@ -25,7 +25,7 @@
     "typecheck": "tsc --noEmit && tsc --noEmit -p tsconfig.web.json",
     "test": "vitest run",
     "test:watch": "vitest",
-    "test:e2e": "TEST_DATABASE_URL=${TEST_DATABASE_URL:-postgresql://postgres@localhost:55432/grimoire} vitest run tests/integration/walk.e2e.test.ts",
+    "test:e2e": "TEST_DATABASE_URL=${TEST_DATABASE_URL:-postgresql://postgres@localhost:55432/grimoire} vitest run --no-file-parallelism tests/integration/walk.e2e.test.ts tests/integration/faces.e2e.test.ts",
     "check:all": "npm run format:check && npm run lint && npm run typecheck && npm test",
     "spec:html": "spec-render",
     "spec:html:watch": "spec-render --watch",

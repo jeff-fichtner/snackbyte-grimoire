@@ -17,8 +17,13 @@ export type VerbClass = 'charm' | 'hex';
 /** What a verb is handed: the event, and a way to speak. */
 export interface VerbContext {
   event: CanonicalEvent;
-  /** Send a message to a destination the tenant owns. Routed through the chokepoint. */
+  /** Send a message to a destination the tenant owns, as the application. Through the chokepoint. */
   speak(destinationId: string, content: string): Promise<void>;
+  /**
+   * Send a message through a face the tenant owns — wearing its name/avatar. Same chokepoint;
+   * the face supplies the channel and the persona.
+   */
+  speakThroughFace(faceId: string, content: string): Promise<void>;
 }
 
 export interface Verb<Config = unknown> {

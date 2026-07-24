@@ -33,34 +33,34 @@ final call branches. Do not add a second delivery path, an HTTP route, or a `web
 
 ## Phase 1: Setup
 
-- [ ] T001 Write `migrations/0002_faces.sql` — the `faces` table with `tenant_id`/`install_id`
+- [X] T001 Write `migrations/0002_faces.sql` — the `faces` table with `tenant_id`/`install_id`
   NOT NULL, `name`, nullable `avatar_url`, `secret_ref` (the **per-channel** webhook credential
   reference), `origin` (`'minted' | 'adopted'`), `UNIQUE (tenant_id, install_id, channel_ref,
   name)`, and index `faces_by_channel (tenant_id, install_id, channel_ref)` — exactly as
   [data-model.md](./data-model.md) specifies. No `webhook_url` column (Constitution VII).
-- [ ] T002 Apply it locally — `node --env-file=.env.local scripts/migrate.mjs` — and confirm the
+- [X] T002 Apply it locally — `node --env-file=.env.local scripts/migrate.mjs` — and confirm the
   table, the composite unique, and the index exist.
 
 ## Phase 2: Foundational (Blocking Prerequisites)
 
 **These block every user story. No story starts until Phase 2 is done.**
 
-- [ ] T003 Add the `Face` type and tenant-scoped face methods to the `Repository` interface in
+- [X] T003 Add the `Face` type and tenant-scoped face methods to the `Repository` interface in
   `src/db/repository.ts` — `createFace`, `listFaces`, `getFace`, `renameFace`, `deleteFace`
   (returns `{ wasLastInChannel }`), `countChannelFaces` — every method taking `TenantRef` first.
-- [ ] T004 [P] Extend `OutboundMessage` in `src/core/logistics/binding.ts` with an optional
+- [X] T004 [P] Extend `OutboundMessage` in `src/core/logistics/binding.ts` with an optional
   `face { credential: string; username: string; avatarUrl?: string }`, and add the model-named
   face operations to the `Binding` interface — `establishFace`, `adoptFace`, `listChannelFaces`,
   `reidentifyFace`, `retireFace` — with no webhook/Discord vocabulary in the interface.
-- [ ] T005 Implement the face methods in `src/db/pg-repository.ts` — tenant-scoped SQL; the
+- [X] T005 Implement the face methods in `src/db/pg-repository.ts` — tenant-scoped SQL; the
   per-channel `secret_ref` is shared by a channel's faces; `deleteFace` derives `wasLastInChannel`
   from `countChannelFaces` inside one transaction.
-- [ ] T006 [P] Implement the face methods in `src/db/fake-repository.ts` — in-memory doubles that
+- [X] T006 [P] Implement the face methods in `src/db/fake-repository.ts` — in-memory doubles that
   **throw** on a cross-tenant face read/write, so isolation is unit-testable without a database.
-- [ ] T007 Confirm `deliver` (`src/core/logistics/deliver.ts`) carries `message.face` through the
+- [X] T007 Confirm `deliver` (`src/core/logistics/deliver.ts`) carries `message.face` through the
   chokepoint unchanged, and extend the redaction in `src/core/log.ts` so `face.credential` can
   never reach a log line (Constitution VII), with a probe test as in 001's redaction test.
-- [ ] T008 [P] Extend the ESLint `no-restricted-imports` guard so `src/core/**` cannot import a
+- [X] T008 [P] Extend the ESLint `no-restricted-imports` guard so `src/core/**` cannot import a
   Discord/webhook type — faces stay model-named in core (Constitution I).
 
 ## Phase 3: User Story 1 — A spell speaks with a face the community chose (Priority: P1) 🎯 MVP
@@ -71,27 +71,27 @@ name/avatar and a `delivered` record.
 
 ### Tests for User Story 1
 
-- [ ] T009 [P] [US1] `tests/unit/faces-verb.test.ts` — `post_message` config parse: `faceId` XOR
+- [X] T009 [P] [US1] `tests/unit/faces-verb.test.ts` — `post_message` config parse: `faceId` XOR
   `destinationId`; an unknown/both-present shape is refused (Constitution IV).
-- [ ] T010 [P] [US1] `tests/unit/discord-faces.test.ts` — binding `establishFace` (mint) issues
+- [X] T010 [P] [US1] `tests/unit/discord-faces.test.ts` — binding `establishFace` (mint) issues
   the create call; `send` with a `face` posts through `face.credential` carrying `username`/
   `avatar_url`; `send` without a face is unchanged — all against a stub `fetch`.
 
 ### Implementation for User Story 1
 
-- [ ] T011 [US1] In `src/bindings/discord/index.ts` implement `establishFace`, `reidentifyFace`,
+- [X] T011 [US1] In `src/bindings/discord/index.ts` implement `establishFace`, `reidentifyFace`,
   and the `send` face-branch (post through the webhook URL with `username`/`avatar_url`; else the
   001 application path), reusing the 001 permanent-vs-transient classification.
-- [ ] T012 [US1] Create the face noun `src/core/nouns/faces.ts` — `mintFace` (establish-or-reuse
+- [X] T012 [US1] Create the face noun `src/core/nouns/faces.ts` — `mintFace` (establish-or-reuse
   the channel credential via the binding, store its URL as a secret through the repo, insert the
   row `origin: 'minted'`) and `renameFace` (update the row + `reidentifyFace`); tenant-scoped.
-- [ ] T013 [US1] Teach the verb to speak through a face: extend `verb_config` parsing in
+- [X] T013 [US1] Teach the verb to speak through a face: extend `verb_config` parsing in
   `src/core/language/verbs/post-message.ts` to accept `faceId`; resolve the face + its credential
   in `src/core/invocation.ts` and place them on `OutboundMessage.face`; extend `VerbContext` in
   `src/core/language/verbs/index.ts` accordingly. (Depends on T011, T012.)
-- [ ] T014 [P] [US1] `scripts/provision-face.mjs` — `mint`, `rename`, `list` subcommands;
+- [X] T014 [P] [US1] `scripts/provision-face.mjs` — `mint`, `rename`, `list` subcommands;
   fail-loud on missing env (no fallback); never prints the webhook URL.
-- [ ] T015 [US1] `tests/integration/faces.e2e.test.ts` — mint a face, point a spell at it, invoke
+- [X] T015 [US1] `tests/integration/faces.e2e.test.ts` — mint a face, point a spell at it, invoke
   → `delivered` and the outbound message carries the face's name/avatar; a **second** face in the
   same channel establishes **no** second webhook (FR-010); rename the face and confirm the next
   message uses the new name (FR-014); and mint without the management authority refuses cleanly,
@@ -104,7 +104,7 @@ name/avatar and a `delivered` record.
 **Goal**: prove isolation. Most enforcement is inherent in the tenant-scoped repo (Phase 2);
 this story proves it and closes the spell-reference path.
 
-- [ ] T016 [US2] `tests/integration/faces-isolation.e2e.test.ts` — A's spell naming B's `faceId`
+- [X] T016 [US2] `tests/integration/faces-isolation.e2e.test.ts` — A's spell naming B's `faceId`
   is recorded `failed`, never delivered (FR-008); `listFaces` as A returns only A's and never
   reveals B's (FR-006); `listFaces` output contains no credential (FR-013); listing without the
   management authority refuses cleanly rather than returning an empty result (FR-006);
@@ -116,14 +116,14 @@ this story proves it and closes the spell-reference path.
 
 **Goal**: delete revokes future use; the record stays honest.
 
-- [ ] T017 [US3] Extend the face noun `deleteFace` (`src/core/nouns/faces.ts`) — reference-count
+- [X] T017 [US3] Extend the face noun `deleteFace` (`src/core/nouns/faces.ts`) — reference-count
   the channel's faces; when the deleted one is the last, call `binding.retireFace` and remove the
   channel secret; never touch already-sent messages (FR-015/016).
-- [ ] T018 [US3] `scripts/provision-face.mjs` — add the `delete` subcommand.
-- [ ] T019 [P] [US3] `tests/unit/faces-delete.test.ts` — `deleteFace` retires the credential only
+- [X] T018 [US3] `scripts/provision-face.mjs` — add the `delete` subcommand.
+- [X] T019 [P] [US3] `tests/unit/faces-delete.test.ts` — `deleteFace` retires the credential only
   on the channel's last face; an invocation whose credential no longer resolves classifies as
   permanent (a retired webhook → 404).
-- [ ] T020 [US3] Integration test in `tests/integration/faces.e2e.test.ts` — delete a face a
+- [X] T020 [US3] Integration test in `tests/integration/faces.e2e.test.ts` — delete a face a
   spell speaks through → next invocation recorded `failed`, no message appears; messages sent
   before deletion remain unchanged. (Depends on T017.)
 
@@ -133,12 +133,12 @@ this story proves it and closes the spell-reference path.
 
 **Goal**: adopt an existing webhook — the non-default, more-privileged path.
 
-- [ ] T021 [US4] In `src/bindings/discord/index.ts` implement `adoptFace` (validate a supplied
+- [X] T021 [US4] In `src/bindings/discord/index.ts` implement `adoptFace` (validate a supplied
   credential is reachable); in `src/core/nouns/faces.ts` add `adoptFace` (store the supplied URL
   as the channel secret, `origin: 'adopted'`) — explicit, never the default (FR-004).
-- [ ] T022 [US4] `scripts/provision-face.mjs` — add the `adopt` subcommand, requiring an explicit
+- [X] T022 [US4] `scripts/provision-face.mjs` — add the `adopt` subcommand, requiring an explicit
   `ADOPT_WEBHOOK_URL`; `mint` never adopts.
-- [ ] T023 [P] [US4] `tests/integration/faces-adopt.e2e.test.ts` — adopt stores the supplied
+- [X] T023 [P] [US4] `tests/integration/faces-adopt.e2e.test.ts` — adopt stores the supplied
   credential and posts under the pre-existing persona; `adopt` with no URL refuses; `mint` never
   adopts.
 
@@ -146,12 +146,12 @@ this story proves it and closes the spell-reference path.
 
 ## Phase 7: Polish & Cross-Cutting Concerns
 
-- [ ] T024 Run the full gate green — `npm run check:all` and `npm run test:e2e` — and run
+- [X] T024 Run the full gate green — `npm run check:all` and `npm run test:e2e` — and run
   quickstart Scenarios 1–4 against staging with a live channel (the one manual slice: confirm the
   message **visibly** wears the face's name and avatar).
-- [ ] T025 [P] Document the **Manage Webhooks** bot permission (mint/list require it) in the
+- [X] T025 [P] Document the **Manage Webhooks** bot permission (mint/list require it) in the
   deploy notes and `.env.local.example` comments, and record the faces provisioning path.
-- [ ] T026 [P] Note in `MIGRATION.md` that faces discharges the predecessor's 010-faces, and in
+- [X] T026 [P] Note in `MIGRATION.md` that faces discharges the predecessor's 010-faces, and in
   `PARITY.md` if the webhook-mode-target row it left behind is now covered.
 
 ---

@@ -16,6 +16,7 @@ const REDACTED = [
   'authorization',
   'signature',
   'value',
+  'credential',
   'tokenRef',
   'secretRef',
   'DISCORD_BOT_TOKEN',

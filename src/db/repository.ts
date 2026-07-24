@@ -34,6 +34,26 @@ export interface Destination {
   channelRef: string;
 }
 
+/** A face — a community-owned persona. The credential is reached only via `secretRef`. */
+export interface Face {
+  id: string;
+  installId: string;
+  channelRef: string;
+  name: string;
+  avatarUrl: string | null;
+  secretRef: string;
+  origin: 'minted' | 'adopted';
+}
+
+export interface CreateFaceInput {
+  installId: string;
+  channelRef: string;
+  name: string;
+  avatarUrl?: string | null;
+  secretRef: string;
+  origin: 'minted' | 'adopted';
+}
+
 /** The platform's identity on one binding. Not tenant-scoped — see data-model.md. */
 export interface Application {
   id: string;
@@ -74,6 +94,30 @@ export interface Repository {
 
   /** Resolves a reference to a value. The only way a secret is ever read. */
   resolveSecret(tenant: TenantRef, ref: string): Promise<string | null>;
+
+  /**
+   * Write a tenant-scoped secret at runtime (idempotent on the ref).
+   *
+   * A capability URL is a secret (Constitution VII), and a tenant establishing a face must
+   * store it without a deploy — so the secret store is writable at runtime, not only seeded.
+   */
+  putSecret(tenant: TenantRef, ref: string, value: string): Promise<void>;
+  /** Remove a tenant-scoped secret — used when a channel's last face retires its credential. */
+  deleteSecret(tenant: TenantRef, ref: string): Promise<void>;
+
+  // ── Faces (nouns) — every operation tenant-scoped ──────────────────────────────────────
+  createFace(tenant: TenantRef, input: CreateFaceInput): Promise<Face>;
+  listFaces(tenant: TenantRef, channelRef?: string): Promise<Face[]>;
+  getFace(tenant: TenantRef, faceId: string): Promise<Face | null>;
+  renameFace(
+    tenant: TenantRef,
+    faceId: string,
+    changes: { name?: string; avatarUrl?: string | null },
+  ): Promise<void>;
+  /** Delete a face; signals whether it was the channel's last, so the credential can retire. */
+  deleteFace(tenant: TenantRef, faceId: string): Promise<{ wasLastInChannel: boolean } | null>;
+  /** How many faces a channel holds — the reference count for the shared credential. */
+  countChannelFaces(tenant: TenantRef, installId: string, channelRef: string): Promise<number>;
 
   /**
    * Claim an event for a spell, writing the record as `pending`.

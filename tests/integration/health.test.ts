@@ -11,7 +11,13 @@ import { FakeRepository } from '../../src/db/fake-repository.js';
 import { createServer } from '../../src/server.js';
 
 /** Health never speaks to a platform, so this binding exists only to satisfy the type. */
-const silentBinding: Binding = { key: 'test', send: async () => {} };
+const silentBinding: Binding = {
+  key: 'test',
+  send: async () => {},
+  establishFace: async () => ({ credential: 'x' }),
+  adoptFace: async () => {},
+  retireFace: async () => {},
+};
 const serve = (repo: FakeRepository) =>
   createServer({ repo, binding: silentBinding, applicationId: 'app-1' });
 

@@ -123,6 +123,12 @@ verbs are hexes, the inbound sources are trigger species, faces are nouns. **The
 is 001–006 as they _would have looked_ after the tenancy line landed** — which is
 materially less work than 001–006 as they exist.
 
+**Faces landed as spec 002** — discharging the predecessor's planned ROADMAP 010-faces
+(mint/list/adopt/delete + per-message persona), which it could never build because its
+008 secret store and 009 identity did not exist yet. Grimoire had both from 001, so faces
+was unblocked with no prerequisite spec. `DEMO_CHANNEL_WEBHOOK` never has to exist here:
+a face is a row, its webhook URL a credential-by-reference, minted by the platform.
+
 ## What is actually refused — the patterns we are pivoting from
 
 These do not come across in any form, at any point. Rebuilding them would re-implement work

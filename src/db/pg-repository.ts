@@ -10,7 +10,9 @@ import { type TenantRef, tenantId } from '../core/law/tenant-ref.js';
 import type { TerminalOutcome } from '../core/logistics/outcome.js';
 import type {
   Application,
+  CreateFaceInput,
   Destination,
+  Face,
   RecordHandle,
   RecordInput,
   Repository,
@@ -101,6 +103,144 @@ export class PgRepository implements Repository {
       [tenantId(tenant), ref],
     );
     return rows[0]?.value ?? null;
+  }
+
+  async putSecret(tenant: TenantRef, ref: string, value: string): Promise<void> {
+    await this.pool.query(
+      `INSERT INTO secrets (tenant_id, ref, value) VALUES ($1, $2, $3)
+       ON CONFLICT (tenant_id, ref) DO UPDATE SET value = EXCLUDED.value`,
+      [tenantId(tenant), ref, value],
+    );
+  }
+
+  async deleteSecret(tenant: TenantRef, ref: string): Promise<void> {
+    await this.pool.query(`DELETE FROM secrets WHERE tenant_id = $1 AND ref = $2`, [
+      tenantId(tenant),
+      ref,
+    ]);
+  }
+
+  private static faceOf(row: {
+    id: string;
+    install_id: string;
+    channel_ref: string;
+    name: string;
+    avatar_url: string | null;
+    secret_ref: string;
+    origin: string;
+  }): Face {
+    return {
+      id: row.id,
+      installId: row.install_id,
+      channelRef: row.channel_ref,
+      name: row.name,
+      avatarUrl: row.avatar_url,
+      secretRef: row.secret_ref,
+      origin: row.origin as Face['origin'],
+    };
+  }
+
+  async createFace(tenant: TenantRef, input: CreateFaceInput): Promise<Face> {
+    const { rows } = await this.pool.query(
+      `INSERT INTO faces (tenant_id, install_id, channel_ref, name, avatar_url, secret_ref, origin)
+       VALUES ($1, $2, $3, $4, $5, $6, $7)
+       RETURNING id, install_id, channel_ref, name, avatar_url, secret_ref, origin`,
+      [
+        tenantId(tenant),
+        input.installId,
+        input.channelRef,
+        input.name,
+        input.avatarUrl ?? null,
+        input.secretRef,
+        input.origin,
+      ],
+    );
+    return PgRepository.faceOf(rows[0]);
+  }
+
+  async listFaces(tenant: TenantRef, channelRef?: string): Promise<Face[]> {
+    const { rows } = await this.pool.query(
+      `SELECT id, install_id, channel_ref, name, avatar_url, secret_ref, origin
+         FROM faces
+        WHERE tenant_id = $1 AND ($2::text IS NULL OR channel_ref = $2)
+        ORDER BY created_at`,
+      [tenantId(tenant), channelRef ?? null],
+    );
+    return rows.map(PgRepository.faceOf);
+  }
+
+  async getFace(tenant: TenantRef, faceId: string): Promise<Face | null> {
+    const { rows } = await this.pool.query(
+      `SELECT id, install_id, channel_ref, name, avatar_url, secret_ref, origin
+         FROM faces WHERE id = $1 AND tenant_id = $2`,
+      [faceId, tenantId(tenant)],
+    );
+    return rows[0] ? PgRepository.faceOf(rows[0]) : null;
+  }
+
+  async renameFace(
+    tenant: TenantRef,
+    faceId: string,
+    changes: { name?: string; avatarUrl?: string | null },
+  ): Promise<void> {
+    // COALESCE keeps a field untouched when the change omits it (undefined → null → keep).
+    await this.pool.query(
+      `UPDATE faces
+          SET name = COALESCE($3, name),
+              avatar_url = CASE WHEN $4::boolean THEN $5 ELSE avatar_url END
+        WHERE id = $1 AND tenant_id = $2`,
+      [
+        faceId,
+        tenantId(tenant),
+        changes.name ?? null,
+        changes.avatarUrl !== undefined,
+        changes.avatarUrl ?? null,
+      ],
+    );
+  }
+
+  async deleteFace(
+    tenant: TenantRef,
+    faceId: string,
+  ): Promise<{ wasLastInChannel: boolean } | null> {
+    const client = await this.pool.connect();
+    try {
+      await client.query('BEGIN');
+      const { rows } = await client.query(
+        `DELETE FROM faces WHERE id = $1 AND tenant_id = $2
+         RETURNING install_id, channel_ref`,
+        [faceId, tenantId(tenant)],
+      );
+      if (rows.length === 0) {
+        await client.query('COMMIT');
+        return null;
+      }
+      const { rows: countRows } = await client.query(
+        `SELECT count(*)::int AS n FROM faces
+          WHERE tenant_id = $1 AND install_id = $2 AND channel_ref = $3`,
+        [tenantId(tenant), rows[0].install_id, rows[0].channel_ref],
+      );
+      await client.query('COMMIT');
+      return { wasLastInChannel: countRows[0].n === 0 };
+    } catch (error) {
+      await client.query('ROLLBACK');
+      throw error;
+    } finally {
+      client.release();
+    }
+  }
+
+  async countChannelFaces(
+    tenant: TenantRef,
+    installId: string,
+    channelRef: string,
+  ): Promise<number> {
+    const { rows } = await this.pool.query(
+      `SELECT count(*)::int AS n FROM faces
+        WHERE tenant_id = $1 AND install_id = $2 AND channel_ref = $3`,
+      [tenantId(tenant), installId, channelRef],
+    );
+    return rows[0].n;
   }
 
   /**
