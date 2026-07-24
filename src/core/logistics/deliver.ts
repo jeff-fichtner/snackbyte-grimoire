@@ -9,7 +9,12 @@
 import { type TenantRef, tenantId } from '../law/tenant-ref.js';
 import type { RecordInput, Repository } from '../../db/repository.js';
 import { childLog } from '../log.js';
-import { type Binding, PermanentDeliveryFailure, TransientDeliveryFailure } from './binding.js';
+import {
+  type Binding,
+  type OutboundFace,
+  PermanentDeliveryFailure,
+  TransientDeliveryFailure,
+} from './binding.js';
 
 const log = childLog('deliver');
 
@@ -68,6 +73,8 @@ export async function deliver(
   record: RecordInput,
   channelRef: string,
   content: string,
+  /** When set, the message speaks through this face instead of as the application. */
+  face?: OutboundFace,
 ): Promise<DeliveryResult> {
   const { repo, binding, applicationId } = deps;
   const sleep = deps.sleep ?? ((ms: number) => new Promise((r) => setTimeout(r, ms)));
@@ -87,7 +94,7 @@ export async function deliver(
 
     for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
       try {
-        await binding.send(applicationId, { channelRef, content });
+        await binding.send(applicationId, { channelRef, content, face });
         await repo.settleRecord(tenant, claim, 'delivered');
         return 'delivered';
       } catch (error) {

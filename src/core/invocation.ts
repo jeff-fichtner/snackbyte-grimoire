@@ -94,6 +94,20 @@ export async function invoke(
                 content,
               );
             },
+            speakThroughFace: async (faceId, content) => {
+              const face = await deps.repo.getFace(tenant, faceId);
+              if (!face) throw new Error(`no face ${faceId}`);
+              // The credential is resolved here, at the last moment, and travels no further
+              // than the message. A deleted face's credential is gone, so this throws and the
+              // invocation is recorded failed — never delivered.
+              const credential = await deps.repo.resolveSecret(tenant, face.secretRef);
+              if (!credential) throw new Error(`face ${faceId} has no credential`);
+              outcomeOf.value = await deliver(deps, tenant, record, face.channelRef, content, {
+                credential,
+                username: face.name,
+                avatarUrl: face.avatarUrl ?? undefined,
+              });
+            },
           },
           verb.parse(spell.verbConfig) as never,
         );
