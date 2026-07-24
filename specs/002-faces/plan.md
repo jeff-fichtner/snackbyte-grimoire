@@ -134,7 +134,8 @@ tests/
 existing grammar — a new **noun** (`src/core/nouns/faces.ts`, the tenant-scoped operations), a
 **binding** extension (the webhook mechanics, quarantined in `src/bindings/discord/`), and a
 **verb** extension (`post_message` learns an optional face). The one new table follows the
-`destinations`/`secrets` shape. No new top-level area is introduced.
+`destinations`/`secrets` shape. No new area outside `src/core/` is introduced — the `nouns/`
+directory joins the existing core grammar.
 
 ## Complexity Tracking
 
