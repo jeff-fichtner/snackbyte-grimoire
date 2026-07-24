@@ -93,7 +93,9 @@ name/avatar and a `delivered` record.
   fail-loud on missing env (no fallback); never prints the webhook URL.
 - [ ] T015 [US1] `tests/integration/faces.e2e.test.ts` — mint a face, point a spell at it, invoke
   → `delivered` and the outbound message carries the face's name/avatar; a **second** face in the
-  same channel establishes **no** second webhook (FR-010). (Depends on T011–T013.)
+  same channel establishes **no** second webhook (FR-010); rename the face and confirm the next
+  message uses the new name (FR-014); and mint without the management authority refuses cleanly,
+  writing no row (FR-002). (Depends on T011–T013.)
 
 **Checkpoint**: US1 is independently demoable — a community's chosen face speaks.
 
@@ -104,8 +106,9 @@ this story proves it and closes the spell-reference path.
 
 - [ ] T016 [US2] `tests/integration/faces-isolation.e2e.test.ts` — A's spell naming B's `faceId`
   is recorded `failed`, never delivered (FR-008); `listFaces` as A returns only A's and never
-  reveals B's (FR-006); `renameFace`/`deleteFace` on B's face as A is refused and leaves it
-  unchanged (FR-007).
+  reveals B's (FR-006); `listFaces` output contains no credential (FR-013); listing without the
+  management authority refuses cleanly rather than returning an empty result (FR-006);
+  `renameFace`/`deleteFace` on B's face as A is refused and leaves it unchanged (FR-007).
 
 **Checkpoint**: every cross-tenant crossing is refused.
 
@@ -159,7 +162,9 @@ this story proves it and closes the spell-reference path.
   and the `Binding` face ops block everything.
 - **US1 (P1)** is the MVP and unblocks the others — it builds the binding face-branch, the noun,
   and the verb path the rest reuse.
-- **US2 (P1)** depends only on Phase 2's tenant-scoped repo (it is mostly proof).
+- **US2 (P1)** depends on Phase 2's tenant-scoped repo **and** on US1's verb→face path (T013),
+  since its test names a spell's `faceId`; it is otherwise mostly proof. Phase order (US2 after
+  US1) already reflects this.
 - **US3 (P2)** depends on US1's noun (`deleteFace` extends it).
 - **US4 (P3)** depends on US1's binding/noun (adds the adopt entry).
 - Within a story, `[P]` tasks (different files) run together; the binding (T011) precedes the
