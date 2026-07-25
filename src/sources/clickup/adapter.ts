@@ -11,10 +11,39 @@
  */
 import { createHmac } from 'node:crypto';
 import type { CanonicalEvent } from '../../core/language/event.js';
-import { type SourceAdapter, registerSource } from '../types.js';
+import { type EnrichContext, type SourceAdapter, registerSource } from '../types.js';
+
+/**
+ * A tenant's ClickUp API token, stored in the secret store by this ref. It is a DISTINCT
+ * credential from the webhook signing secret (which only proves a payload is genuine) — this
+ * one reads task detail back out of ClickUp, so it is held separately and resolved per tenant.
+ * Absent ⇒ enrichment is simply off for that tenant; the relay still fires without the name.
+ */
+const CLICKUP_API_TOKEN_REF = 'clickup.api-token';
+/** Bounded so a slow ClickUp API can never stall the inbound acknowledgement. */
+const ENRICH_TIMEOUT_MS = 2500;
 
 function str(value: unknown): string | undefined {
   return typeof value === 'string' ? value : undefined;
+}
+
+/** Ask ClickUp for a task's human name. Any failure returns undefined — never throws. */
+async function fetchTaskName(
+  fetchImpl: typeof fetch,
+  taskId: string,
+  token: string,
+): Promise<string | undefined> {
+  try {
+    const res = await fetchImpl(`https://api.clickup.com/api/v2/task/${taskId}`, {
+      headers: { Authorization: token },
+      signal: AbortSignal.timeout(ENRICH_TIMEOUT_MS),
+    });
+    if (!res.ok) return undefined;
+    const task = (await res.json()) as { name?: unknown };
+    return str(task.name);
+  } catch {
+    return undefined;
+  }
 }
 
 function obj(value: unknown): Record<string, unknown> | undefined {
@@ -77,6 +106,24 @@ export const clickup: SourceAdapter = {
     if (taskId) put('url', `https://app.clickup.com/t/${taskId}`);
 
     return { source: 'clickup', eventType, dedupeKey, facts };
+  },
+
+  /**
+   * Add `{task_name}`, which the webhook never carries — it sends only `task_id`. Reads the
+   * tenant's ClickUp token from the secret store and asks the API for the task's name.
+   *
+   * Best-effort by the adapter contract: no token, an unknown task id, or a failed/slow call
+   * all return the event untouched, so the relay still fires (just without the name). It only
+   * ever ADDS a fact; it never removes or fabricates one.
+   */
+  async enrich(event: CanonicalEvent, ctx: EnrichContext): Promise<CanonicalEvent> {
+    const taskId = event.facts.task_id;
+    if (!taskId) return event;
+    const token = await ctx.resolveSecret(CLICKUP_API_TOKEN_REF);
+    if (!token) return event;
+    const name = await fetchTaskName(ctx.fetch, taskId, token);
+    if (!name) return event;
+    return { ...event, facts: { ...event.facts, task_name: name } };
   },
 };
 
