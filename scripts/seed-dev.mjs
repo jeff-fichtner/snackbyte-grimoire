@@ -169,7 +169,9 @@ try {
         JSON.stringify({
           destinationId,
           transform: {
-            template: '📋 **{status_before}** → **{status}**  ·  moved by {user}\n{url}',
+            // {task_name} comes from the ClickUp adapter's enrich() hook (the webhook carries
+            // only a task id); blank until the tenant's clickup.api-token secret is set.
+            template: '📋 **{task_name}**\n**{status_before}** → **{status}** · by {user}\n{url}',
           },
         }),
       ],
