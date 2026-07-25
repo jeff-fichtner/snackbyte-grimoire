@@ -16,9 +16,17 @@ export interface ServerDeps {
   binding: Binding;
   applicationId: string;
   sleep?: (ms: number) => Promise<void>;
+  /** Injected so source enrichment (e.g. a ClickUp task-name lookup) is testable offline. */
+  fetchImpl?: typeof fetch;
 }
 
-export function createServer({ repo, binding, applicationId, sleep }: ServerDeps): Express {
+export function createServer({
+  repo,
+  binding,
+  applicationId,
+  sleep,
+  fetchImpl = fetch,
+}: ServerDeps): Express {
   const app = express();
   app.disable('x-powered-by');
 
@@ -53,11 +61,30 @@ export function createServer({ repo, binding, applicationId, sleep }: ServerDeps
       }
 
       const adapter = getSource(admission.source);
-      const event = adapter?.parse(body, headers) ?? null;
-      if (!event) {
+      const parsed = adapter?.parse(body, headers) ?? null;
+      if (!adapter || !parsed) {
         // Genuine, but nothing a spell can be written against (a ping, an unmodelled shape).
         res.status(202).json({ accepted: true, matched: 0 });
         return;
+      }
+
+      // Enrichment: let the source add facts its webhook did not carry (a ClickUp task's name),
+      // using a secret resolver bound to THIS tenant. Best-effort by the adapter contract —
+      // it returns the event unchanged rather than throwing — but guarded here too, so a
+      // misbehaving adapter can never turn a deliverable event into a dropped one.
+      let event = parsed;
+      if (adapter.enrich) {
+        try {
+          event = await adapter.enrich(parsed, {
+            resolveSecret: (ref) => repo.resolveSecret(admission.tenant, ref),
+            fetch: fetchImpl,
+          });
+        } catch (error) {
+          log.warn(
+            { source: parsed.source, err: error instanceof Error ? error.message : String(error) },
+            'enrichment failed; proceeding with the un-enriched event',
+          );
+        }
       }
 
       // Acknowledge once the work is claimed and under way, not once it is delivered:
