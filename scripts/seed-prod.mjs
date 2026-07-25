@@ -142,7 +142,9 @@ try {
       source: 'clickup',
       eventType: 'taskStatusUpdated',
       condition: { op: 'not', of: { op: 'equals', fact: 'status_before', value: '' } },
-      template: '📋 **{status_before}** → **{status}**  ·  moved by {user}\n{url}',
+      // {task_name} is added by the ClickUp adapter's enrich() hook (the webhook sends only a
+      // task id); it renders blank until a tenant's clickup.api-token secret is set.
+      template: '📋 **{task_name}**\n**{status_before}** → **{status}** · by {user}\n{url}',
     },
   ];
   for (const s of spells) {
