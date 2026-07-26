@@ -20,8 +20,20 @@ import { type EnrichContext, type SourceAdapter, registerSource } from '../types
  * Absent ⇒ enrichment is simply off for that tenant; the relay still fires without the name.
  */
 const CLICKUP_API_TOKEN_REF = 'clickup.api-token';
-/** Bounded so a slow ClickUp API can never stall the inbound acknowledgement. */
-const ENRICH_TIMEOUT_MS = 2500;
+/**
+ * Bounded so a slow ClickUp API can never stall the inbound acknowledgement. Generous enough
+ * for `/team`, which is genuinely slow (~2.3s) — but that one is cached below, so only the first
+ * event on a fresh instance ever pays it.
+ */
+const ENRICH_TIMEOUT_MS = 4000;
+
+/**
+ * Team (workspace) names, cached per token for the process's life. `/team` lists EVERY workspace
+ * the token can see and is slow, while the names are effectively static — so calling it on every
+ * event is the wrong trade. One call per token per instance; a rename lags until the instance
+ * recycles, which for a display label is fine.
+ */
+const teamNamesByToken = new Map<string, Map<string, string>>();
 
 function str(value: unknown): string | undefined {
   return typeof value === 'string' ? value : undefined;
@@ -79,15 +91,27 @@ async function fetchSpaceName(
   return str(s?.name);
 }
 
-/** The workspace (team) name, matched from the token's team list — the task carries only team_id. */
+/** The workspace (team) name, matched from the token's team list — the task carries only team_id.
+ *  The `/team` result is cached per token (it is slow and stable); only a cache miss calls out. */
 async function fetchWorkspaceName(
   fetchImpl: typeof fetch,
   teamId: string,
   token: string,
 ): Promise<string | undefined> {
-  const j = await clickupGet(fetchImpl, 'https://api.clickup.com/api/v2/team', token);
-  const teams = Array.isArray(j?.teams) ? (j.teams as Array<Record<string, unknown>>) : [];
-  return str(teams.find((x) => String(x.id) === teamId)?.name);
+  let names = teamNamesByToken.get(token);
+  if (!names) {
+    const j = await clickupGet(fetchImpl, 'https://api.clickup.com/api/v2/team', token);
+    if (!j) return undefined; // do not cache a failure — retry on the next event
+    const teams = Array.isArray(j.teams) ? (j.teams as Array<Record<string, unknown>>) : [];
+    names = new Map(
+      teams.flatMap((x) => {
+        const name = str(x.name);
+        return name ? [[String(x.id), name] as [string, string]] : [];
+      }),
+    );
+    teamNamesByToken.set(token, names);
+  }
+  return names.get(teamId);
 }
 
 function obj(value: unknown): Record<string, unknown> | undefined {
