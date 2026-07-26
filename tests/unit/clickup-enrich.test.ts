@@ -1,10 +1,11 @@
 // @vitest-environment node
 /**
- * ClickUp enrichment: the webhook sends a task id but never the task's name, so the adapter
- * asks the ClickUp API for it with the tenant's token. The properties that matter are all about
- * NOT breaking delivery: enrichment only ever ADDS `task_name`, and every failure mode (no
- * token, a bad task id, an API error, a thrown fetch) returns the event untouched so the relay
- * still fires — a lost fact, never an invented one and never a dropped event.
+ * ClickUp enrichment: the webhook sends only a task id, so the adapter asks the ClickUp API for
+ * the task's name and where it lives (workspace › space › folder › list). The properties that
+ * matter are all about NOT breaking delivery: enrichment only ever ADDS facts, and every failure
+ * mode (no token, a bad id, an API error, a thrown fetch, a partial lookup) returns the event
+ * with whatever was gathered so the relay still fires — a lost fact, never an invented one and
+ * never a dropped event.
  */
 import { describe, expect, it, vi } from 'vitest';
 import type { CanonicalEvent } from '../../src/core/language/event.js';
@@ -28,20 +29,52 @@ function ctx(opts: { token: string | null; fetch: typeof fetch }): EnrichContext
   return { resolveSecret: async () => opts.token, fetch: opts.fetch };
 }
 
-function fetchReturning(status: number, body: unknown): { fn: typeof fetch; calls: unknown[] } {
-  const calls: unknown[] = [];
+/** A fetch stub that routes by URL substring, so the task/space/team calls get distinct bodies. */
+function routedFetch(routes: Array<[string, { status?: number; body: unknown }]>): {
+  fn: typeof fetch;
+  calls: Array<{ url: string; auth?: string }>;
+} {
+  const calls: Array<{ url: string; auth?: string }> = [];
   const fn = (async (url: string, init: RequestInit) => {
     calls.push({ url, auth: (init.headers as Record<string, string>)?.Authorization });
-    return { ok: status >= 200 && status < 300, status, json: async () => body } as Response;
+    const hit = routes.find(([pattern]) => url.includes(pattern));
+    const status = hit?.[1].status ?? (hit ? 200 : 404);
+    return {
+      ok: status >= 200 && status < 300,
+      status,
+      json: async () => hit?.[1].body ?? {},
+    } as Response;
   }) as unknown as typeof fetch;
   return { fn, calls };
 }
 
+const fullRoutes: Array<[string, { status?: number; body: unknown }]> = [
+  [
+    '/task/abc123',
+    {
+      body: {
+        name: 'Fix the login bug',
+        folder: { name: 'Web', hidden: false },
+        list: { name: 'REEN' },
+        space: { id: 's1' },
+        team_id: 't1',
+      },
+    },
+  ],
+  ['/space/s1', { body: { name: 'MCDS' } }],
+  ['/team', { body: { teams: [{ id: 't1', name: 'Forte' }] } }],
+];
+
 describe('clickup enrichment', () => {
-  it('adds task_name from the API when a token is present', async () => {
-    const { fn, calls } = fetchReturning(200, { name: 'Fix the login bug' });
+  it('adds the task name and the full location breadcrumb', async () => {
+    const { fn, calls } = routedFetch(fullRoutes);
     const out = await clickup.enrich!(event, ctx({ token: 'pk_tenant_token', fetch: fn }));
     expect(out.facts.task_name).toBe('Fix the login bug');
+    expect(out.facts.workspace).toBe('Forte');
+    expect(out.facts.space).toBe('MCDS');
+    expect(out.facts.folder).toBe('Web');
+    expect(out.facts.list).toBe('REEN');
+    expect(out.facts.location).toBe('Forte › MCDS › Web › REEN');
     expect(calls[0]).toEqual({
       url: 'https://api.clickup.com/api/v2/task/abc123',
       auth: 'pk_tenant_token',
@@ -50,17 +83,65 @@ describe('clickup enrichment', () => {
     expect(event.facts.task_name).toBeUndefined();
   });
 
+  it('omits a hidden (folderless) folder from the facts and the breadcrumb', async () => {
+    const routes: Array<[string, { status?: number; body: unknown }]> = [
+      [
+        '/task/abc123',
+        {
+          body: {
+            name: 'T',
+            folder: { name: 'hidden', hidden: true },
+            list: { name: 'Inbox' },
+            space: { id: 's1' },
+            team_id: 't1',
+          },
+        },
+      ],
+      ['/space/s1', { body: { name: 'MCDS' } }],
+      ['/team', { body: { teams: [{ id: 't1', name: 'Forte' }] } }],
+    ];
+    const { fn } = routedFetch(routes);
+    const out = await clickup.enrich!(event, ctx({ token: 'pk', fetch: fn }));
+    expect(out.facts.folder).toBeUndefined();
+    expect(out.facts.location).toBe('Forte › MCDS › Inbox');
+  });
+
+  it('keeps the levels that resolved when a lookup fails (breadcrumb has no gap)', async () => {
+    const routes: Array<[string, { status?: number; body: unknown }]> = [
+      [
+        '/task/abc123',
+        {
+          body: {
+            name: 'T',
+            folder: { name: 'Web' },
+            list: { name: 'REEN' },
+            space: { id: 's1' },
+            team_id: 't1',
+          },
+        },
+      ],
+      ['/space/s1', { status: 500, body: {} }], // space lookup fails
+      ['/team', { body: { teams: [{ id: 't1', name: 'Forte' }] } }],
+    ];
+    const { fn } = routedFetch(routes);
+    const out = await clickup.enrich!(event, ctx({ token: 'pk', fetch: fn }));
+    expect(out.facts.space).toBeUndefined();
+    expect(out.facts.location).toBe('Forte › Web › REEN');
+  });
+
   it('passes through unchanged when the tenant has no token (never calls the API)', async () => {
-    const { fn, calls } = fetchReturning(200, { name: 'should not be fetched' });
+    const { fn, calls } = routedFetch(fullRoutes);
     const out = await clickup.enrich!(event, ctx({ token: null, fetch: fn }));
     expect(out.facts.task_name).toBeUndefined();
+    expect(out.facts.location).toBeUndefined();
     expect(calls).toHaveLength(0);
   });
 
-  it('passes through when the API rejects the token (401)', async () => {
-    const { fn } = fetchReturning(401, { err: 'Team not authorized' });
+  it('passes through when the API rejects the token (task 401)', async () => {
+    const { fn } = routedFetch([['/task/abc123', { status: 401, body: {} }]]);
     const out = await clickup.enrich!(event, ctx({ token: 'bad', fetch: fn }));
     expect(out.facts.task_name).toBeUndefined();
+    expect(out.facts.location).toBeUndefined();
   });
 
   it('passes through when the fetch throws (network/timeout)', async () => {
@@ -72,7 +153,7 @@ describe('clickup enrichment', () => {
   });
 
   it('does nothing when there is no task_id to look up', async () => {
-    const { fn, calls } = fetchReturning(200, { name: 'x' });
+    const { fn, calls } = routedFetch(fullRoutes);
     const noId: CanonicalEvent = { ...event, facts: { status: 'shipped' } };
     const out = await clickup.enrich!(noId, ctx({ token: 'pk', fetch: fn }));
     expect(out).toBe(noId);
