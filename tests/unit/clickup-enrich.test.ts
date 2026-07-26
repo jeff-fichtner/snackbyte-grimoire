@@ -101,7 +101,7 @@ describe('clickup enrichment', () => {
       ['/team', { body: { teams: [{ id: 't1', name: 'Forte' }] } }],
     ];
     const { fn } = routedFetch(routes);
-    const out = await clickup.enrich!(event, ctx({ token: 'pk', fetch: fn }));
+    const out = await clickup.enrich!(event, ctx({ token: 'pk_hidden', fetch: fn }));
     expect(out.facts.folder).toBeUndefined();
     expect(out.facts.location).toBe('Forte › MCDS › Inbox');
   });
@@ -124,9 +124,21 @@ describe('clickup enrichment', () => {
       ['/team', { body: { teams: [{ id: 't1', name: 'Forte' }] } }],
     ];
     const { fn } = routedFetch(routes);
-    const out = await clickup.enrich!(event, ctx({ token: 'pk', fetch: fn }));
+    const out = await clickup.enrich!(event, ctx({ token: 'pk_partial', fetch: fn }));
     expect(out.facts.space).toBeUndefined();
     expect(out.facts.location).toBe('Forte › Web › REEN');
+  });
+
+  it('caches the slow /team lookup per token — the second event does not call it again', async () => {
+    const { fn, calls } = routedFetch(fullRoutes);
+    const token = 'pk_cache';
+    const a = await clickup.enrich!(event, ctx({ token, fetch: fn }));
+    const b = await clickup.enrich!(event, ctx({ token, fetch: fn }));
+    expect(a.facts.workspace).toBe('Forte');
+    expect(b.facts.workspace).toBe('Forte'); // still resolved, from cache
+    expect(calls.filter((c) => c.url.endsWith('/team'))).toHaveLength(1);
+    // task and space are NOT cached — fetched both times
+    expect(calls.filter((c) => c.url.includes('/task/'))).toHaveLength(2);
   });
 
   it('passes through unchanged when the tenant has no token (never calls the API)', async () => {
