@@ -31,16 +31,16 @@ const token = required('DISCORD_BOT_TOKEN');
 const tenantName = required('TENANT_NAME');
 const guildId = required('DISCORD_GUILD_ID');
 
-// The tenant's data. Cheeky by design — this is the Playboy Lounge's command.
+// The tenant's data. Suggestive by design — this is the Playboy Lounge's command.
 const LINES = [
-  '🍑 {caster} winds up… and delivers a THUNDEROUS spank to {target}. 👋💥',
-  '{target} has been spanked by {caster}. The Lounge falls silent. 🍑',
-  '👋 {caster} spanks {target} so hard the neighbours filed a noise complaint.',
-  '{caster} delivers a disciplinary spank to {target}. Let that be a lesson. 🍑',
-  'THWACK! 🍑 {target} caught these hands — compliments of {caster}.',
-  '{caster} spanks {target}. No context. No regrets. 👋',
-  "{target} bends the knee; {caster}'s spank echoes through the Lounge. 🍑💥",
-  'A wild {caster} appears and spanks {target} right on the 🍑.',
+  '🍑 {caster} bends {target} over and delivers a slow, deliberate spank. 👋',
+  '{caster} spanks {target} — and lets their hand linger a little too long. 😏',
+  'SMACK. {caster} leaves a handprint on {target} they’ll still feel tonight. 🍑',
+  '{caster} pulls {target} in close and spanks them hard enough to make them gasp. 💋',
+  '{caster} takes {target} over their knee. The Lounge pretends not to watch. 🔥',
+  '{caster} spanks {target} and murmurs, “you’ve earned this.” 😈',
+  '{caster}’s palm meets {target}’s 🍑 — and {target} bites their lip and asks for another.',
+  '{target} has been very, very bad. {caster} makes sure they feel every last one. 🍑👋',
 ];
 
 const commandDef = {
@@ -85,11 +85,11 @@ try {
   const registered = await discord('POST', `/applications/${app.id}/guilds/${guildId}/commands`, commandDef);
   console.log(`registered /spank in guild ${guildId} (command ${registered.id})`);
 
-  // 2. seed the spell (idempotent by tenant+source+event).
+  // 2. seed the spell — upsert so re-running updates the lines (the tenant's data), not just creates.
   await client.query(
     `INSERT INTO spells (id, tenant_id, name, trigger_species, source, event_type, condition, verb, verb_config)
-     SELECT $1, $2, 'Spank', 'interaction', 'discord', 'spank', NULL, 'reply_random', $3::jsonb
-     WHERE NOT EXISTS (SELECT 1 FROM spells WHERE tenant_id = $2 AND source = 'discord' AND event_type = 'spank')`,
+     VALUES ($1, $2, 'Spank', 'interaction', 'discord', 'spank', NULL, 'reply_random', $3::jsonb)
+     ON CONFLICT (tenant_id, name) DO UPDATE SET verb_config = EXCLUDED.verb_config, enabled = true`,
     [randomUUID(), tenant.id, JSON.stringify({ lines: LINES })],
   );
   console.log(`spank spell ready for tenant "${tenantName}" (${LINES.length} lines)`);
