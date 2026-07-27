@@ -108,6 +108,12 @@ export async function invoke(
                 avatarUrl: face.avatarUrl ?? undefined,
               });
             },
+            // A webhook owes no reply. A `needsReturnChannel` verb has no business on this path
+            // and cannot reach a real return channel here, so it fails loudly rather than
+            // pretending to answer someone who never asked.
+            reply: async () => {
+              throw new Error('this trigger species owes no reply');
+            },
           },
           verb.parse(spell.verbConfig) as never,
         );
@@ -129,4 +135,52 @@ export async function invoke(
   );
 
   return outcome;
+}
+
+/**
+ * The invocation walk for a command: the same stations as `invoke` — spell match, logic, verb —
+ * but the logistics station is a REPLY, captured and returned for the synchronous interaction
+ * response rather than delivered to a channel through the async chokepoint.
+ *
+ * The first matching, non-declined spell answers; its content is returned. A command whose verb
+ * owes no reply is a misconfiguration and fails loudly rather than pretending to answer. Returns
+ * null when nothing matched or every match declined — the caller decides what the invoker sees.
+ */
+export async function handleCommand(
+  repo: Repository,
+  tenant: TenantRef,
+  event: CanonicalEvent,
+): Promise<string | null> {
+  const spells = await repo.findSpells(tenant, event.source, event.eventType);
+  for (const spell of spells) {
+    const predicate = parsePredicate(spell.condition);
+    if (!evaluate(predicate, event)) continue; // a decline — try the next matching spell, if any
+
+    const verb = getVerb(spell.verb);
+    if (!verb) throw new InvalidRule(`unknown verb "${spell.verb}"`);
+    if (!verb.needsReturnChannel) {
+      throw new InvalidRule(`verb "${spell.verb}" cannot answer a command — it owes no reply`);
+    }
+
+    // Held in an object so control-flow analysis cannot narrow it to its initializer across the
+    // callback (the same reason `invoke` does it above).
+    const captured: { value: string | null } = { value: null };
+    await verb.perform(
+      {
+        event,
+        speak: async () => {
+          throw new Error('a command verb replies; it does not speak outward');
+        },
+        speakThroughFace: async () => {
+          throw new Error('a command verb replies; it does not speak through a face');
+        },
+        reply: async (content) => {
+          captured.value = content;
+        },
+      },
+      verb.parse(spell.verbConfig) as never,
+    );
+    return captured.value;
+  }
+  return null;
 }

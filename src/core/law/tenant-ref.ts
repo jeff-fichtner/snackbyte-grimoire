@@ -43,6 +43,24 @@ export function tenantFromVerifiedCall(registration: VerifiedRegistration): Tena
 }
 
 /**
+ * An interaction whose signature the binding verified and whose guild resolved to an install.
+ *
+ * Same guarantee as `VerifiedRegistration`, different evidence: for an interaction there is no
+ * per-registration secret — the binding checks the platform's own signature, and the community
+ * (guild) it names, once trusted, maps to exactly one tenant. `signatureVerified: true` is the
+ * literal gate, so only code that has done both steps can mint the reference.
+ */
+export interface VerifiedInteraction {
+  readonly guildRef: string;
+  readonly tenantId: string;
+  readonly signatureVerified: true;
+}
+
+export function tenantFromVerifiedInteraction(interaction: VerifiedInteraction): TenantRef {
+  return { id: interaction.tenantId } as TenantRef;
+}
+
+/**
  * Read the underlying id, for use as a query parameter or a log field.
  *
  * Deliberately one-way: this hands out a string, and no function anywhere turns a string

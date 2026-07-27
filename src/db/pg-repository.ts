@@ -67,6 +67,17 @@ export class PgRepository implements Repository {
       : null;
   }
 
+  async resolveInstallTenant(
+    binding: string,
+    communityRef: string,
+  ): Promise<{ tenantId: string } | null> {
+    const { rows } = await this.pool.query(
+      `SELECT tenant_id FROM installs WHERE binding = $1 AND community_ref = $2 AND enabled`,
+      [binding, communityRef],
+    );
+    return rows[0] ? { tenantId: rows[0].tenant_id } : null;
+  }
+
   async findSpells(tenant: TenantRef, source: string, eventType: string): Promise<Spell[]> {
     const { rows } = await this.pool.query(
       `SELECT id, name, trigger_species, source, event_type, condition, verb, verb_config

@@ -41,6 +41,12 @@ interface StoredRecord extends RecordInput {
   detail?: string;
 }
 
+export interface OwnedInstall {
+  tenantId: string;
+  binding: string;
+  communityRef: string;
+}
+
 export interface FakeSeed {
   registrations?: SourceRegistration[];
   applications?: Application[];
@@ -48,6 +54,7 @@ export interface FakeSeed {
   destinations?: OwnedDestination[];
   secrets?: StoredSecret[];
   faces?: OwnedFace[];
+  installs?: OwnedInstall[];
 }
 
 export class CrossTenantAccess extends Error {
@@ -90,6 +97,17 @@ export class FakeRepository implements Repository {
     return (
       this.seed.applications?.find((a) => a.binding === binding && a.tenantId === null) ?? null
     );
+  }
+
+  async resolveInstallTenant(
+    binding: string,
+    communityRef: string,
+  ): Promise<{ tenantId: string } | null> {
+    this.live();
+    const found = (this.seed.installs ?? []).find(
+      (i) => i.binding === binding && i.communityRef === communityRef,
+    );
+    return found ? { tenantId: found.tenantId } : null;
   }
 
   async findSpells(tenant: TenantRef, source: string, eventType: string): Promise<Spell[]> {

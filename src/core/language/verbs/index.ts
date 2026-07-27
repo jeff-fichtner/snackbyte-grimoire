@@ -24,6 +24,12 @@ export interface VerbContext {
    * the face supplies the channel and the persona.
    */
   speakThroughFace(faceId: string, content: string): Promise<void>;
+  /**
+   * Reply to whoever invoked this — the return channel a `needsReturnChannel` verb owes. Real
+   * only under a trigger species that owes a reply (an interaction); every other path provides
+   * one that throws, so a reply verb cannot silently succeed where there is no one to answer.
+   */
+  reply(content: string): Promise<void>;
 }
 
 export interface Verb<Config = unknown> {

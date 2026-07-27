@@ -6,6 +6,7 @@
  */
 import { loadConfig } from './config.js';
 import { createDiscordBinding } from './bindings/discord/index.js';
+import { createDiscordInteractions } from './bindings/discord/interactions.js';
 import { createRegistry } from './bindings/registry.js';
 import { childLog } from './core/log.js';
 import { PgRepository } from './db/pg-repository.js';
@@ -13,6 +14,7 @@ import { createServer } from './server.js';
 // Registering the vocabulary is a side effect of import, which is what keeps core free of
 // a switch statement enumerating them.
 import './core/language/verbs/post-message.js';
+import './core/language/verbs/reply-random.js';
 import './sources/clickup/adapter.js';
 import './sources/github/adapter.js';
 
@@ -32,6 +34,13 @@ async function start(): Promise<void> {
   });
   const binding = createDiscordBinding({ registry });
 
+  // The interaction surface is wired only when its public key is configured. Absent ⇒ the
+  // endpoint is simply not served; present-but-malformed throws here, at boot, by design.
+  const interactions = config.discordPublicKey
+    ? createDiscordInteractions({ publicKey: config.discordPublicKey })
+    : undefined;
+  if (!interactions) log.warn('DISCORD_PUBLIC_KEY unset — interactions endpoint disabled');
+
   const application = await repo.getPlatformApplication('discord');
   if (!application) {
     throw new Error(
@@ -40,7 +49,7 @@ async function start(): Promise<void> {
     );
   }
 
-  const app = createServer({ repo, binding, applicationId: application.id });
+  const app = createServer({ repo, binding, applicationId: application.id, interactions });
 
   const server = app.listen(config.port, () => {
     log.info({ port: config.port }, 'grimoire is listening');
