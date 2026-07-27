@@ -25,6 +25,10 @@ substitutions:
   _DATABASE_URL_SECRET: ''
   _BOT_TOKEN_SECRET: ''
   _RUNTIME_SA: '' # the per-tier runtime service account; scoped to only this tier's secrets
+  # The Discord app's Ed25519 PUBLIC key (not a secret), per environment. Optional by design:
+  # empty ⇒ the interactions endpoint is disabled (503), and NOTHING else changes — so it is
+  # NOT in the required-substitutions check below. A tier turns interactions on by supplying it.
+  _DISCORD_PUBLIC_KEY: ''
 
 # Refuse to run rather than guess. Cloud Build does not enforce required substitutions, so
 # the check is explicit and it is the first thing that happens.
@@ -96,7 +100,9 @@ steps:
       # Secrets arrive from Secret Manager, never from this file, and their NAMES are
       # per-environment so staging can never read production's database.
       - '--update-secrets=DATABASE_URL=${_DATABASE_URL_SECRET}:latest,DISCORD_BOT_TOKEN=${_BOT_TOKEN_SECRET}:latest'
-      - '--set-env-vars=LOG_LEVEL=info'
+      # DISCORD_PUBLIC_KEY is a plain env var (public, not a secret). Empty in a tier that has not
+      # opted into interactions — the app reads empty as unset and serves 503 on that endpoint.
+      - '--set-env-vars=LOG_LEVEL=info,DISCORD_PUBLIC_KEY=${_DISCORD_PUBLIC_KEY}'
 
 images:
   - '${_REGION}-docker.pkg.dev/$PROJECT_ID/grimoire/${_SERVICE}:$TAG_NAME'

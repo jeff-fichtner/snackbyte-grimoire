@@ -79,12 +79,16 @@ jobs:
               echo "db_secret=grimoire-prod-database-url"           >> "$GITHUB_OUTPUT"
               echo "bot_secret=grimoire-prod-discord-bot-token"     >> "$GITHUB_OUTPUT"
               echo "runtime_sa=grimoire-prod-runtime@snackbyte-apps.iam.gserviceaccount.com"    >> "$GITHUB_OUTPUT"
+              # Prod has not opted into interactions yet — empty key keeps the endpoint disabled.
+              echo "public_key="                                    >> "$GITHUB_OUTPUT"
               ;;
             dev)
               echo "service=grimoire-staging"                       >> "$GITHUB_OUTPUT"
               echo "db_secret=grimoire-staging-database-url"        >> "$GITHUB_OUTPUT"
               echo "bot_secret=grimoire-staging-discord-bot-token"  >> "$GITHUB_OUTPUT"
               echo "runtime_sa=grimoire-staging-runtime@snackbyte-apps.iam.gserviceaccount.com" >> "$GITHUB_OUTPUT"
+              # grimoire-dev application's Ed25519 public key (public value; enables interactions).
+              echo "public_key=3b8e28c148286a68267b710814460cf35c80b7b9abebe77431d9333ad4d7f618" >> "$GITHUB_OUTPUT"
               ;;
             *)
               echo "::error::Branch '${{ github.ref_name }}' has no environment mapping."
@@ -103,4 +107,5 @@ jobs:
           _REGION=us-central1,\
           _DATABASE_URL_SECRET=${{ steps.env.outputs.db_secret }},\
           _BOT_TOKEN_SECRET=${{ steps.env.outputs.bot_secret }},\
-          _RUNTIME_SA=${{ steps.env.outputs.runtime_sa }}
+          _RUNTIME_SA=${{ steps.env.outputs.runtime_sa }},\
+          _DISCORD_PUBLIC_KEY=${{ steps.env.outputs.public_key }}
