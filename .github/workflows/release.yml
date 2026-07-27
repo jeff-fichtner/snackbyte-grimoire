@@ -79,8 +79,8 @@ jobs:
               echo "db_secret=grimoire-prod-database-url"           >> "$GITHUB_OUTPUT"
               echo "bot_secret=grimoire-prod-discord-bot-token"     >> "$GITHUB_OUTPUT"
               echo "runtime_sa=grimoire-prod-runtime@snackbyte-apps.iam.gserviceaccount.com"    >> "$GITHUB_OUTPUT"
-              # Prod has not opted into interactions yet — empty key keeps the endpoint disabled.
-              echo "public_key="                                    >> "$GITHUB_OUTPUT"
+              # grimoire (prod) application's Ed25519 public key (public value; enables interactions).
+              echo "public_key=1425b4b60d0fa6a84e5228fddcaadf172d27786a5603571c950e39b70e6f6a82" >> "$GITHUB_OUTPUT"
               ;;
             dev)
               echo "service=grimoire-staging"                       >> "$GITHUB_OUTPUT"
