@@ -2,9 +2,11 @@
  * The HTTP surface: one inbound door and two health routes.
  */
 import express, { type Express } from 'express';
-import { invoke } from './core/invocation.js';
+import { handleCommand, invoke } from './core/invocation.js';
 import { authenticate } from './core/law/authenticate.js';
+import { tenantFromVerifiedInteraction } from './core/law/tenant-ref.js';
 import type { Binding } from './core/logistics/binding.js';
+import type { InteractionAdapter } from './core/logistics/interaction.js';
 import { childLog } from './core/log.js';
 import type { Repository } from './db/repository.js';
 import { getSource } from './sources/types.js';
@@ -18,6 +20,8 @@ export interface ServerDeps {
   sleep?: (ms: number) => Promise<void>;
   /** Injected so source enrichment (e.g. a ClickUp task-name lookup) is testable offline. */
   fetchImpl?: typeof fetch;
+  /** The binding's interaction surface. Absent ⇒ the interactions endpoint is not served. */
+  interactions?: InteractionAdapter;
 }
 
 export function createServer({
@@ -26,6 +30,7 @@ export function createServer({
   applicationId,
   sleep,
   fetchImpl = fetch,
+  interactions,
 }: ServerDeps): Express {
   const app = express();
   app.disable('x-powered-by');
@@ -100,6 +105,66 @@ export function createServer({
       res.status(202).json({ accepted: true, ...outcome });
     },
   );
+
+  /**
+   * The interaction door — Discord POSTs a slash command here (the HTTP transport, not the
+   * gateway), signed with Ed25519. The binding verifies and normalizes it to a canonical event;
+   * the law resolves the guild to a tenant; the command walk runs and its reply is the
+   * synchronous response. Served only when a binding supplied an interaction surface.
+   */
+  app.post('/interactions', express.raw({ type: '*/*', limit: '1mb' }), async (req, res) => {
+    if (!interactions) {
+      res.status(503).json({ error: 'interactions not configured' });
+      return;
+    }
+    const body = Buffer.isBuffer(req.body) ? req.body : Buffer.alloc(0);
+    const headers = req.headers as Record<string, string | undefined>;
+    const signature = headers['x-signature-ed25519'];
+    const timestamp = headers['x-signature-timestamp'];
+
+    // Discord requires a 401 on a bad signature — and it probes the endpoint with a deliberately
+    // invalid one when the URL is set, so this rejection has to be clean.
+    if (!signature || !timestamp || !interactions.verify(timestamp, body, signature)) {
+      res.status(401).json({ error: 'bad signature' });
+      return;
+    }
+
+    const parsed = interactions.parse(body);
+    if (parsed.kind === 'ping') {
+      res.json(interactions.pong());
+      return;
+    }
+    if (parsed.kind !== 'command') {
+      res.json(interactions.ephemeral('This interaction is not handled.'));
+      return;
+    }
+
+    try {
+      const install = await repo.resolveInstallTenant(binding.key, parsed.command.guildRef);
+      if (!install) {
+        res.json(interactions.ephemeral('This server is not set up for that command.'));
+        return;
+      }
+      const tenant = tenantFromVerifiedInteraction({
+        guildRef: parsed.command.guildRef,
+        tenantId: install.tenantId,
+        signatureVerified: true,
+      });
+      const content = await handleCommand(repo, tenant, parsed.command.event);
+      res.json(
+        content ? interactions.message(content) : interactions.ephemeral('Nothing happened.'),
+      );
+    } catch (error) {
+      log.warn(
+        {
+          cmd: parsed.command.event.eventType,
+          err: error instanceof Error ? error.message : String(error),
+        },
+        'interaction failed',
+      );
+      res.json(interactions.ephemeral('Something went wrong casting that.'));
+    }
+  });
 
   /**
    * Is the process running? Answers whenever the event loop turns, and MUST NOT consult the

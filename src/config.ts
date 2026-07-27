@@ -21,6 +21,12 @@ function required(name: string): string {
   return value;
 }
 
+/** For a genuinely optional capability whose absence can only turn a feature OFF, never wrong. */
+function optional(name: string): string | undefined {
+  const value = process.env[name];
+  return value === undefined || value.trim() === '' ? undefined : value;
+}
+
 export interface Config {
   databaseUrl: string;
   port: number;
@@ -29,6 +35,15 @@ export interface Config {
    * platform's Discord application, and is reached only through `getRest(applicationId)`.
    */
   discordBotToken: string;
+  /**
+   * The Discord application's Ed25519 PUBLIC key, used to verify inbound interactions.
+   *
+   * Optional on purpose — not a smuggled silent default. It gates an ADDITIVE capability: when
+   * it is absent the interactions endpoint answers 503 and webhooks are wholly unaffected, so a
+   * missing value can only turn the feature off, never produce wrong behaviour. When it IS set,
+   * it is validated at boot — a malformed key throws in `createPublicKey`, loudly, at startup.
+   */
+  discordPublicKey?: string;
 }
 
 export function loadConfig(): Config {
@@ -40,5 +55,6 @@ export function loadConfig(): Config {
     databaseUrl: required('DATABASE_URL'),
     port,
     discordBotToken: required('DISCORD_BOT_TOKEN'),
+    discordPublicKey: optional('DISCORD_PUBLIC_KEY'),
   };
 }

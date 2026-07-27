@@ -89,6 +89,15 @@ export interface Repository {
   /** The one application for a binding whose tenant_id is NULL. */
   getPlatformApplication(binding: string): Promise<Application | null>;
 
+  /**
+   * Resolve the tenant that installed a binding in a community (a Discord guild).
+   *
+   * The law's entry point for interactions: it takes NO `TenantRef` because it is what produces
+   * one — the guild arrives inside a signature-verified interaction, and this maps it to exactly
+   * one tenant (installs are unique per binding+community). Returns null for an unknown guild.
+   */
+  resolveInstallTenant(binding: string, communityRef: string): Promise<{ tenantId: string } | null>;
+
   findSpells(tenant: TenantRef, source: string, eventType: string): Promise<Spell[]>;
   getDestination(tenant: TenantRef, destinationId: string): Promise<Destination | null>;
 
