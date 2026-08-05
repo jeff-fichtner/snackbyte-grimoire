@@ -193,9 +193,9 @@ export class PgRepository implements Repository {
     tenant: TenantRef,
     faceId: string,
     changes: { name?: string; avatarUrl?: string | null },
-  ): Promise<void> {
+  ): Promise<boolean> {
     // COALESCE keeps a field untouched when the change omits it (undefined → null → keep).
-    await this.pool.query(
+    const { rowCount } = await this.pool.query(
       `UPDATE faces
           SET name = COALESCE($3, name),
               avatar_url = CASE WHEN $4::boolean THEN $5 ELSE avatar_url END
@@ -208,6 +208,7 @@ export class PgRepository implements Repository {
         changes.avatarUrl ?? null,
       ],
     );
+    return (rowCount ?? 0) > 0;
   }
 
   async deleteFace(

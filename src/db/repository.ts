@@ -118,11 +118,12 @@ export interface Repository {
   createFace(tenant: TenantRef, input: CreateFaceInput): Promise<Face>;
   listFaces(tenant: TenantRef, channelRef?: string): Promise<Face[]>;
   getFace(tenant: TenantRef, faceId: string): Promise<Face | null>;
+  /** Rename a face; `false` when no row of this tenant matched, so the caller can refuse loudly. */
   renameFace(
     tenant: TenantRef,
     faceId: string,
     changes: { name?: string; avatarUrl?: string | null },
-  ): Promise<void>;
+  ): Promise<boolean>;
   /** Delete a face; signals whether it was the channel's last, so the credential can retire. */
   deleteFace(tenant: TenantRef, faceId: string): Promise<{ wasLastInChannel: boolean } | null>;
   /** How many faces a channel holds — the reference count for the shared credential. */

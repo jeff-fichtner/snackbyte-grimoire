@@ -19,7 +19,13 @@ import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import { createDiscordBinding } from '../../src/bindings/discord/index.js';
 import { createRegistry } from '../../src/bindings/registry.js';
 import { type TenantRef, tenantFromVerifiedCall } from '../../src/core/law/tenant-ref.js';
-import { adoptFace, deleteFace, mintFace, renameFace } from '../../src/core/nouns/faces.js';
+import {
+  adoptFace,
+  deleteFace,
+  FaceConflict,
+  mintFace,
+  renameFace,
+} from '../../src/core/nouns/faces.js';
 import { PgRepository } from '../../src/db/pg-repository.js';
 import { createServer } from '../../src/server.js';
 import '../../src/core/language/verbs/post-message.js';
@@ -378,5 +384,28 @@ describeIfDb('faces, end to end', () => {
     expect(await outcomesFor(spell)).toContain('delivered');
     const wh = posted.find((p) => p.kind === 'webhook' && p.target === 'wh-supplied');
     expect(wh?.username).toBe('miss honey');
+  });
+
+  it('adopting into a channel that already has a face is REFUSED, not silently dropped (US4)', async () => {
+    liveWebhooks.add('wh-other');
+    const port = (stub.address() as AddressInfo).port;
+    const minted = await mintFace({ repo, binding, applicationId: ids.application }, refA, {
+      installId: ids.installA,
+      channelRef: 'chan-taken',
+      name: 'GitHub',
+    });
+    await expect(
+      adoptFace({ repo, binding, applicationId: ids.application }, refA, {
+        installId: ids.installA,
+        channelRef: 'chan-taken',
+        name: 'miss honey',
+        suppliedCredential: `http://127.0.0.1:${port}/webhooks/wh-other/tok`,
+      }),
+    ).rejects.toThrow(FaceConflict);
+    // The channel is exactly as it was: one face, still on the credential we minted.
+    const rows = await repo.listFaces(refA, 'chan-taken');
+    expect(rows).toHaveLength(1);
+    expect(rows[0].id).toBe(minted.id);
+    expect(rows[0].origin).toBe('minted');
   });
 });

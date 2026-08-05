@@ -189,10 +189,13 @@ spell at it, and confirm messages arrive under the pre-existing name and avatar.
   create, list, rename, re-avatar, delete, speak-through — MUST be confined to the community
   that owns it.
 - **FR-006**: A community MUST be able to list its own faces, and that listing MUST reveal
-  nothing about any other community's faces, including whether any exist. Listing, like
-  creating, requires the platform to hold the management authority in that community; where it
-  is absent, listing MUST fail clearly rather than return an empty or partial result that could
-  be mistaken for "no faces".
+  nothing about any other community's faces, including whether any exist. Listing MUST NOT
+  require the management authority that creating does: a face is a record the platform keeps, so
+  listing reads the platform's own record rather than asking the channel. This is what makes the
+  empty-or-partial result that could be mistaken for "no faces" impossible — the records are
+  there whatever authority the platform holds in the community — and it keeps a community able
+  to see the faces it owns even where the platform's authority has since been reduced, which it
+  can still speak through.
 - **FR-007**: A face owned by one community MUST NOT be nameable, reachable, or discoverable by
   any other community; an attempt to operate on another community's face MUST be refused and
   leave the face unchanged.
@@ -279,9 +282,10 @@ spell at it, and confirm messages arrive under the pre-existing name and avatar.
 ## Assumptions
 
 - The platform speaks in a community only where it has been admitted to that community, and
-  creating or listing faces additionally requires a management authority that admission may or
-  may not include; where it is absent, those operations fail clearly and the rest of the
-  feature (adopt, speak-through, delete) still works.
+  creating a face additionally requires a management authority that admission may or may not
+  include; where it is absent, creation fails clearly and the rest of the feature (list, adopt,
+  speak-through, delete) still works — listing reads the platform's own records, and the others
+  act on a credential already held.
 - A channel imposes a hard limit on how many delivery webhooks can exist in it; because all of a
   channel's faces share one webhook (the name and avatar are per-message), the platform needs
   about one webhook per channel however many faces speak there, so the limit is not expected to

@@ -59,10 +59,11 @@ methods, one verb branch, and a provisioning script.
   implements them; a second binding would implement the same interface. Core names no platform.
   No tenant or binding is special-cased.
 - **II. Verify Before Process** — PASS. Faces add no inbound trigger, so no new verification
-  path. Establishing/listing a channel's credential requires a management authority the binding
-  may lack; per least-privilege that authority is requested only where those operations are
-  used, and its absence fails clearly (FR-002, FR-006). Adopting a supplied credential is
-  gated as more-privileged and non-default (FR-004), matching "minting beats consuming".
+  path. Establishing a channel's credential requires a management authority the binding may
+  lack; per least-privilege that authority is requested only where that operation is used, and
+  its absence fails clearly (FR-002). Listing asks for no authority at all — faces are rows, so
+  it reads the platform's own records (FR-006). Adopting a supplied credential is gated as
+  more-privileged and non-default (FR-004), matching "minting beats consuming".
 - **III. Idempotent, Rate-Limited Delivery** — PASS. A face message goes through the single
   `deliver` chokepoint unchanged (FR-011): same dedupe-by-(spell,key), same permanent-vs-
   transient classification, same fair per-tenant budget. Only the binding's outbound call
