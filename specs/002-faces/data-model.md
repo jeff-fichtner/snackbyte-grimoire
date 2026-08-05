@@ -94,17 +94,19 @@ Model-named face operations, implemented by each binding:
 interface Binding {
   send(applicationId, message): Promise<void>;   // 001 — now branches on message.face
 
-  // face lifecycle (management-authority operations, used by the noun, not the walk):
-  establishFace(applicationId, channelRef, name, avatarUrl?): Promise<{ credential: string }>;
-  adoptFace(credential): Promise<{ ok: true }>;            // accept a supplied credential (validate shape/reachability)
-  listChannelFaces(applicationId, channelRef): Promise<Array<{ name: string; avatarUrl?: string }>>;
-  reidentifyFace(credential, name?, avatarUrl?): Promise<void>;
-  retireFace(credential): Promise<void>;                  // delete the channel's webhook
+  // face lifecycle (used by the noun, not the walk) — only these three touch the platform:
+  establishFace(applicationId, channelRef, name): Promise<{ credential: string }>;  // needs the management authority
+  adoptFace(credential): Promise<void>;                   // accept a supplied credential (validate reachability)
+  retireFace(credential): Promise<void>;                  // delete the channel's webhook — minted only
 }
 ```
 
-Names stay platform-neutral (`establish`/`retire`/`reidentify`, "face", "credential"); the
-Discord binding maps them to webhook create/list/patch/delete and execute.
+Listing and renaming are deliberately absent: faces are rows, so listing is a store read needing
+no authority (FR-006), and the persona is applied per message, so a rename is a row update the
+next message wears (FR-014) — neither has a live object to ask about or re-identify.
+
+Names stay platform-neutral (`establish`/`adopt`/`retire`, "face", "credential"); the Discord
+binding maps them to webhook create/get/delete and execute.
 
 ## Extension: `Repository` (tenant-scoped, `src/db/repository.ts`)
 
@@ -112,9 +114,9 @@ Discord binding maps them to webhook create/list/patch/delete and execute.
 createFace(tenant, input): Promise<Face>;                 // insert row; input carries channel + name + avatar + secret_ref + origin
 listFaces(tenant, channelRef?): Promise<Face[]>;          // FR-006 — tenant-scoped
 getFace(tenant, faceId): Promise<Face | null>;            // FR-008 — resolve for a spell, tenant-scoped
-renameFace(tenant, faceId, name?, avatarUrl?): Promise<void>;  // FR-014
+renameFace(tenant, faceId, changes): Promise<boolean>;    // FR-014 — false when no row matched, so the noun can refuse
 deleteFace(tenant, faceId): Promise<{ wasLastInChannel: boolean }>;  // FR-015 — signals credential retirement
-countChannelFaces(tenant, channelRef): Promise<number>;   // reference count for credential lifecycle
+countChannelFaces(tenant, installId, channelRef): Promise<number>;  // reference count for credential lifecycle
 ```
 
 Every method takes the branded `TenantRef`; there is no unscoped face read or write.
@@ -122,12 +124,17 @@ Every method takes the branded `TenantRef`; there is no unscoped face read or wr
 ## State & lifecycle
 
 - **Create (mint)**: if the channel has no credential → `establishFace` → store URL as the
-  channel secret → `createFace` (origin `minted`). Else reuse the credential → `createFace`.
+  channel secret under a fresh ref (`face-webhook.<install>.<channel>`) → `createFace` (origin
+  `minted`). Else reuse the credential, taking its ref **from an existing face row** rather than
+  re-deriving it → `createFace`.
 - **Create (adopt)**: `adoptFace(supplied URL)` → store as the channel secret → `createFace`
-  (origin `adopted`). Explicit, non-default.
+  (origin `adopted`). Explicit, non-default, and only into a channel that has no credential yet —
+  a channel already speaking through one **refuses** the adoption rather than dropping the
+  supplied credential (which would leave a row whose `origin` lies about what is beneath it).
 - **Speak**: spell names `faceId` → `getFace` (tenant-scoped) → `resolveSecret(channel ref)` →
   `OutboundMessage.face` → chokepoint → binding posts through the credential.
-- **Rename/re-avatar**: `renameFace` updates the row; `reidentifyFace` updates the live webhook
-  so the change shows on the next message (FR-014).
-- **Delete**: `deleteFace`; if `wasLastInChannel` → `retireFace` + remove the channel secret
-  (FR-015). Prior messages untouched (FR-016).
+- **Rename/re-avatar**: `renameFace` updates the row, and that is the whole operation — the
+  persona is applied per message, so the next message shows the change (FR-014).
+- **Delete**: `deleteFace`; if `wasLastInChannel` → remove the channel secret, and `retireFace`
+  **only when the credential was minted** — an adopted one is the community's own and outlives
+  our use of it (FR-015). Prior messages untouched (FR-016).

@@ -186,15 +186,16 @@ export class FakeRepository implements Repository {
     tenant: TenantRef,
     faceId: string,
     changes: { name?: string; avatarUrl?: string | null },
-  ): Promise<void> {
+  ): Promise<boolean> {
     this.live();
     const found = this.faces.find((f) => f.id === faceId);
-    if (!found) return;
+    if (!found) return false;
     if (found.tenantId !== tenantId(tenant)) {
       throw new CrossTenantAccess(`face ${faceId}`, tenantId(tenant), found.tenantId);
     }
     if (changes.name !== undefined) found.name = changes.name;
     if (changes.avatarUrl !== undefined) found.avatarUrl = changes.avatarUrl;
+    return true;
   }
 
   async deleteFace(

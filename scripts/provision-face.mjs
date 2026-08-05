@@ -57,7 +57,25 @@ async function resolveTenantInstall(tenantName) {
   return { tenantId, installId: i.rows[0].id };
 }
 
-const channelSecretRef = (channelRef) => `face-webhook.${channelRef}`;
+/**
+ * Where a NEW channel's credential lives. Includes the install because a ref is unique only
+ * within a tenant and one tenant may hold several installs. An ESTABLISHED channel's ref is read
+ * off its rows instead — see `channelCredential` (mirrors src/core/nouns/faces.ts).
+ */
+const newChannelSecretRef = (installId, channelRef) => `face-webhook.${installId}.${channelRef}`;
+
+/** The ref this channel's faces share, and whether the credential behind it already exists. */
+async function channelCredential(tenantId, installId, channelRef) {
+  const { rows } = await client.query(
+    `SELECT secret_ref FROM faces
+      WHERE tenant_id=$1 AND install_id=$2 AND channel_ref=$3
+      ORDER BY created_at LIMIT 1`,
+    [tenantId, installId, channelRef],
+  );
+  return rows.length > 0
+    ? { ref: rows[0].secret_ref, established: true }
+    : { ref: newChannelSecretRef(installId, channelRef), established: false };
+}
 
 async function discord(method, path, { token, body } = {}) {
   const headers = { 'content-type': 'application/json' };
@@ -72,12 +90,8 @@ async function discord(method, path, { token, body } = {}) {
 
 /** Establish (or reuse) the channel's credential; store it as a secret. Returns the secret ref. */
 async function ensureCredential(tenantId, installId, channelRef, produce) {
-  const ref = channelSecretRef(channelRef);
-  const count = await client.query(
-    `SELECT count(*)::int AS n FROM faces WHERE tenant_id=$1 AND install_id=$2 AND channel_ref=$3`,
-    [tenantId, installId, channelRef],
-  );
-  if (count.rows[0].n === 0) {
+  const { ref, established } = await channelCredential(tenantId, installId, channelRef);
+  if (!established) {
     const credential = await produce();
     await client.query(
       `INSERT INTO secrets (tenant_id, ref, value) VALUES ($1,$2,$3)
@@ -103,6 +117,21 @@ try {
     const channelRef = required('DISCORD_CHANNEL_ID');
     const name = required('FACE_NAME');
     const avatarUrl = process.env.FACE_AVATAR_URL ?? null;
+
+    // Adoption is the FIRST act in a channel or none at all — a channel holds one credential,
+    // so there is nowhere to put a supplied one when faces already speak there. Refuse rather
+    // than silently drop it and write a row whose origin lies (mirrors src/core/nouns/faces.ts).
+    if (command === 'adopt') {
+      const { established } = await channelCredential(tenantId, installId, channelRef);
+      if (established) {
+        console.error(
+          `REFUSING: channel ${channelRef} already speaks through an established credential.\n` +
+            `  Mint a face named "${name}" instead (the persona is per-message, so the result is\n` +
+            `  identical), or delete the channel's faces first.`,
+        );
+        process.exit(1);
+      }
+    }
 
     const secretRef = await ensureCredential(tenantId, installId, channelRef, async () => {
       if (command === 'adopt') {
