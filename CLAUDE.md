@@ -35,3 +35,32 @@ minor for operational or non-spec work (wiring a source, infra/config, template 
 rides the current minor), nor a second time on the same spec, nor on merge, nor to dodge a tag
 collision (fix the collision, do not invent a version). A stray bump is **UNDONE — rewritten out
 of history, not reverted forward — and its tags deleted.**
+
+## Naming note: the brand is infused here (known debt)
+
+This repo is the reason `snackbyte-base/NAMING.md` exists. The convention is that a
+repo is named for **what it does** and the product name is a **UX surface only**,
+confined to one branding module. Grimoire predates that rule and does not follow it.
+
+**Legitimate brand surfaces** — correct to exist, but currently hardcoded string
+literals rather than read from a branding module:
+- `src/web/index.html` — `<title>Grimoire</title>`
+- `src/web/components/Shell.tsx` — the wordmark
+- `src/web/screens/Home.tsx` — "Your grimoire" heading copy
+
+**Actual leaks** — the name has become an identifier:
+- `package.json` — package name and description
+- `package.json` — test database name (`.../grimoire`)
+- `src/main.ts` — startup log string
+- `cloudbuild.yaml` — Artifact Registry repository path, `_SERVICE` default, and
+  the `grimoire-<env>-` secret-name prefix that CI conditions on
+
+The infrastructure names are the expensive half: renaming the registry repo, the
+Cloud Run service, or the secrets means recreating cloud resources and
+re-authorizing CI. That is precisely the cost the rule exists to avoid.
+
+**Do not "fix" this opportunistically.** It is deliberate, recorded debt — the app
+works and a rename is a migration, not a refactor. If a rebrand ever happens, do the
+brand-slot extraction first (the three surfaces above), then the identifiers, then
+the infrastructure, in that order. Meanwhile: **do not add new occurrences.** New
+user-facing copy should come from a branding module, not a literal.
