@@ -82,7 +82,11 @@ try {
 
   // 1. register /spank guild-scoped (POST upserts by name; PUT would wipe other commands).
   const app = await discord('GET', '/applications/@me');
-  const registered = await discord('POST', `/applications/${app.id}/guilds/${guildId}/commands`, commandDef);
+  const registered = await discord(
+    'POST',
+    `/applications/${app.id}/guilds/${guildId}/commands`,
+    commandDef,
+  );
   console.log(`registered /spank in guild ${guildId} (command ${registered.id})`);
 
   // 2. seed the spell — upsert so re-running updates the lines (the tenant's data), not just creates.
