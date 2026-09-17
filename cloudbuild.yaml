@@ -25,6 +25,10 @@ substitutions:
   _DATABASE_URL_SECRET: ''
   _BOT_TOKEN_SECRET: ''
   _RUNTIME_SA: '' # the per-tier runtime service account; scoped to only this tier's secrets
+  # Always-on or scale-to-zero, per tier. Prod holds connections and must not cold-start on
+  # every event (1); staging sees no traffic and pays for nothing while idle (0). Required —
+  # a default here would silently bill an always-on instance for a tier nobody is using.
+  _MIN_INSTANCES: ''
   # The Discord app's Ed25519 PUBLIC key (not a secret), per environment. Optional by design:
   # empty ⇒ the interactions endpoint is disabled (503), and NOTHING else changes — so it is
   # NOT in the required-substitutions check below. A tier turns interactions on by supplying it.
@@ -49,6 +53,7 @@ steps:
         [ -z "${_DATABASE_URL_SECRET}" ] && missing="$$missing _DATABASE_URL_SECRET"
         [ -z "${_BOT_TOKEN_SECRET}" ]    && missing="$$missing _BOT_TOKEN_SECRET"
         [ -z "${_RUNTIME_SA}" ]          && missing="$$missing _RUNTIME_SA"
+        [ -z "${_MIN_INSTANCES}" ]       && missing="$$missing _MIN_INSTANCES"
         if [ -n "$$missing" ]; then
           echo "REFUSING TO DEPLOY. Missing required substitutions:$$missing" >&2
           echo "A default for any of these could deploy the wrong code, or the right code" >&2
@@ -58,6 +63,7 @@ steps:
         echo "deploying '${_SERVICE}' to '${_REGION}'"
         echo "  database secret: ${_DATABASE_URL_SECRET}"
         echo "  bot token secret: ${_BOT_TOKEN_SECRET}"
+        echo "  min instances: ${_MIN_INSTANCES}"
 
   - id: build
     name: gcr.io/cloud-builders/docker
@@ -88,8 +94,8 @@ steps:
       # even if _DATABASE_URL_SECRET above named the wrong tier's secret, this identity could
       # not read it — the deploy fails closed instead of silently serving prod against staging.
       - '--service-account=${_RUNTIME_SA}'
-      # Always-on: the service holds connections and must not cold-start on every event.
-      - '--min-instances=1'
+      # Per tier (see the substitution): prod always-on, staging scale-to-zero.
+      - '--min-instances=${_MIN_INSTANCES}'
       # Public at the transport layer ON PURPOSE. A webhook source (GitHub, ClickUp) cannot
       # present a Google IAM identity, so the service must accept anonymous invocation — and
       # the app does its OWN authentication in the law, verifying an HMAC over the raw bytes

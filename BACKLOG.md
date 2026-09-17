@@ -53,8 +53,8 @@ Postgres underneath, via `pg` and the migrations in `migrations/`.
 **Why leave.** Free-plan projects auto-pause after 7 days without database activity. Staging
 paused in early August 2026 and every deploy failed at container start until 2026-09-17, with
 the running revision up-but-dead the whole time; prod is on the same rule and is kept alive
-only by its own traffic. The stopgap is a Cloud Scheduler job (`staging-db-keepalive`, in
-`snackbyte-apps`, every 6h) hitting staging's `/health/ready`, which runs `SELECT 1` through
+only by its own traffic. The stopgap is a Cloud Scheduler job (`grimoire-staging-db-keepalive` and `grimoire-db-keepalive`, in
+`snackbyte-apps`, every 6h) hitting each tier's `/health/ready`, which runs `SELECT 1` through
 the app's pool. The real fix Supabase offers is Pro (~$25/mo, no pausing) — and paying for a
 platform whose only used part is plain Postgres is not where the money should go. The data
 storage direction (decided in conversation, 2026-09-17) is that Supabase is not the
