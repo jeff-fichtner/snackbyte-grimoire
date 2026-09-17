@@ -42,3 +42,29 @@ what motivated it.
 Registry, the Cloud Run service name, Secret Manager entries, and CI authorization.
 Staged: brand slot first, identifiers second, infrastructure last. The infrastructure
 half is a migration and should not be started casually.
+
+## Move the database off Supabase
+
+**Now.** Both tiers are Supabase Postgres on the free plan, in one org: `grimoire-staging` and
+`grimoire-prod`, reached through the Supavisor pooler (`aws-0-us-east-1.pooler.supabase.com`).
+The app uses none of Supabase's platform — no PostgREST, Auth, Storage, or Realtime — only the
+Postgres underneath, via `pg` and the migrations in `migrations/`.
+
+**Why leave.** Free-plan projects auto-pause after 7 days without database activity. Staging
+paused in early August 2026 and every deploy failed at container start until 2026-09-17, with
+the running revision up-but-dead the whole time; prod is on the same rule and is kept alive
+only by its own traffic. The stopgap is a Cloud Scheduler job (`staging-db-keepalive`, in
+`snackbyte-apps`, every 6h) hitting staging's `/health/ready`, which runs `SELECT 1` through
+the app's pool. The real fix Supabase offers is Pro (~$25/mo, no pausing) — and paying for a
+platform whose only used part is plain Postgres is not where the money should go. The data
+storage direction (decided in conversation, 2026-09-17) is that Supabase is not the
+destination, so a Pro upgrade would be paying for a tier we'd migrate off anyway.
+
+**Wanted.** A Postgres the app owns outright, with no idle-pause and no platform bundle —
+Cloud SQL beside the Cloud Run services is the obvious candidate, given everything else
+already lives in `snackbyte-apps`. Both tiers move; staging first, as the rehearsal.
+
+**Touches.** The two `grimoire-<env>-database-url` secrets (the app reads only `DATABASE_URL`,
+so the code path does not change), `scripts/migrate.mjs` against the new host, the data
+itself (a `pg_dump`/restore per tier), the keepalive job (delete it once staging has moved),
+and the Supabase projects (pause or delete after cutover).
