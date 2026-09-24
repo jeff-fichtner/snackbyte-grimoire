@@ -12,9 +12,11 @@ permissions:
   contents: write
 
 concurrency:
-  # Serialize per branch so two pushes cannot race for the same build number.
-  group: release-${{ github.ref_name }}
+  # Serialize per RELEASABLE, not per branch: the build id is global across every environment
+  # branch, so a per-branch group lets main and dev race to the same number.
+  group: release
   cancel-in-progress: false
+  queue: max # let runs wait their turn; without it a queued release can be thrown away
 
 jobs:
   release:
