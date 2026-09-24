@@ -103,6 +103,15 @@ steps:
       # webhook gets 403 at the edge, never reaching that verification. It bit prod on its
       # first CI deploy; making it explicit here means a redeploy can never silently re-close.
       - '--allow-unauthenticated'
+      # ORTHOGONAL to --allow-unauthenticated above, and easy to mistake for a duplicate of it.
+      # That flag is the INVOKER (who may call: anyone, because a webhook source has no Google
+      # identity). This one is the PATH (where a call may arrive from: the load balancer only,
+      # never directly on *.run.app). A webhook reaches grimoire.snackbyte.io, so it comes
+      # through the LB and is unaffected; what this rejects is someone bypassing the LB -- and
+      # with it Cloud Armor -- by hitting the run.app URL. The live services already carry this
+      # ingress, but it was set by hand at stand-up and nothing re-asserted it, so a recreated
+      # service would have come up open. Do not remove either line thinking it covers the other.
+      - '--ingress=internal-and-cloud-load-balancing'
       # Secrets arrive from Secret Manager, never from this file, and their NAMES are
       # per-environment so staging can never read production's database.
       - '--update-secrets=DATABASE_URL=${_DATABASE_URL_SECRET}:latest,DISCORD_BOT_TOKEN=${_BOT_TOKEN_SECRET}:latest'
